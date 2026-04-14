@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>鑑定理論 穴埋め暗記</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+.header{background:linear-gradient(135deg,#e65100,#bf360c);color:#fff;padding:16px 20px;text-align:center;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.header h1{font-size:18px;font-weight:700}
+.header .sub{font-size:12px;opacity:.85;margin-top:4px}
+.progress-bar{height:4px;background:rgba(255,255,255,.3);margin-top:8px;border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:#fff;border-radius:2px;transition:width .3s}
+.menu{padding:16px;display:flex;flex-direction:column;gap:10px;max-width:600px;margin:0 auto}
+.menu-title{font-size:20px;font-weight:700;text-align:center;margin:12px 0 4px;color:#e65100}
+.menu-section{font-size:13px;font-weight:600;color:#666;margin-top:8px;padding-left:4px}
+.menu-btn{display:flex;align-items:center;justify-content:space-between;background:#fff;border:none;border-radius:12px;padding:14px 18px;font-size:15px;font-weight:600;color:#333;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;transition:transform .1s;width:100%;text-align:left}
+.menu-btn:active{transform:scale(.98)}
+.menu-btn .arrow{color:#aaa;font-size:20px}
+.menu-btn .badge{background:#e65100;color:#fff;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:8px;flex-shrink:0}
+.quiz-area{padding:16px;max-width:600px;margin:0 auto}
+.chapter-label{font-size:12px;color:#e65100;font-weight:600;margin-bottom:4px}
+.q-number{font-size:14px;color:#666;margin-bottom:12px}
+.card{background:#fff;border-radius:16px;padding:24px 20px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:16px;line-height:2.0;font-size:15px}
+.blank{display:inline;background:#e65100;color:#e65100;border-radius:4px;padding:2px 6px;cursor:pointer;transition:all .3s;min-width:40px;user-select:none}
+.blank.revealed{background:#fff3e0;color:#e65100;font-weight:700}
+.reveal-btn{width:100%;padding:16px;background:#e65100;color:#fff;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;margin-bottom:12px;transition:transform .1s}
+.reveal-btn:active{transform:scale(.97)}
+.judge-row{display:flex;gap:12px;margin-bottom:12px;display:none}
+.judge-btn{flex:1;padding:14px;font-size:15px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:transform .1s}
+.judge-btn:active{transform:scale(.95)}
+.judge-ok{background:#e8f5e9;color:#2e7d32}
+.judge-ng{background:#fce4ec;color:#c62828}
+.next-btn{width:100%;padding:16px;background:#e65100;color:#fff;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;display:none;transition:transform .1s}
+.next-btn:active{transform:scale(.97)}
+.back-btn{display:inline-block;padding:14px 32px;background:#e65100;color:#fff;font-size:15px;font-weight:600;border:none;border-radius:12px;cursor:pointer;margin:8px}
+.retry-btn{display:inline-block;padding:14px 32px;background:#fff;color:#e65100;font-size:15px;font-weight:600;border:2px solid #e65100;border-radius:12px;cursor:pointer;margin:8px}
+.result-card{background:#fff;border-radius:16px;padding:32px 24px;box-shadow:0 2px 12px rgba(0,0,0,.08);text-align:center}
+.result-score{font-size:48px;font-weight:700;color:#e65100;margin:16px 0}
+.result-text{font-size:16px;color:#666;margin-bottom:24px}
+.hidden{display:none!important}
+.shuffle-note{text-align:center;font-size:12px;color:#999;margin-top:8px}
+.source{font-size:12px;color:#999;margin-top:8px}
+.menu-back{width:100%;padding:14px;background:#fff;color:#666;font-size:14px;font-weight:600;border:1px solid #ddd;border-radius:12px;cursor:pointer;margin-top:8px;transition:transform .1s}
+.menu-back:active{transform:scale(.97)}
+.link-row{text-align:center;margin-top:12px}
+.link-row a{color:#e65100;font-size:13px;text-decoration:none;font-weight:600}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>鑑定理論 穴埋め暗記</h1>
+  <div class="sub" id="headerSub">定義・原則を覚えよう</div>
+  <div class="progress-bar" id="progressBar" style="display:none"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+</div>
+<div id="menuView" class="menu">
+  <div class="menu-title">カテゴリを選択</div>
+  <div class="menu-section">定義</div>
+  <button class="menu-btn" onclick="startQuiz('def1')"><span>不動産・価格の定義<span class="badge">15問</span></span><span class="arrow">›</span></button>
+  <button class="menu-btn" onclick="startQuiz('def2')"><span>種別・類型の定義<span class="badge">20問</span></span><span class="arrow">›</span></button>
+  <button class="menu-btn" onclick="startQuiz('def3')"><span>価格形成要因の定義<span class="badge">10問</span></span><span class="arrow">›</span></button>
+  <button class="menu-btn" onclick="startQuiz('def4')"><span>価格・賃料の種類の定義<span class="badge">15問</span></span><span class="arrow">›</span></button>
+  <button class="menu-btn" onclick="startQuiz('def5')"><span>鑑定評価の方式の定義<span class="badge">15問</span></span><span class="arrow">›</span></button>
+  <button class="menu-btn" onclick="startQuiz('def6')"><span>地域分析・個別分析の定義<span class="badge">10問</span></span><span class="arrow">›</span></button>
+  <div class="menu-section">原則</div>
+  <button class="menu-btn" onclick="startQuiz('prin')"><span>価格に関する諸原則<span class="badge">12問</span></span><span class="arrow">›</span></button>
+  <div class="menu-section">条件・手順・報告書</div>
+  <button class="menu-btn" onclick="startQuiz('cond')"><span>条件設定・手順・報告書<span class="badge">13問</span></span><span class="arrow">›</span></button>
+  <div class="menu-section">まとめ</div>
+  <button class="menu-btn" onclick="startQuiz('all')" style="background:#fff3e0;">
+    <span style="color:#e65100;">全問まとめて挑戦<span class="badge" id="totalBadge">110問</span></span>
+    <span class="arrow" style="color:#e65100;">›</span>
+  </button>
+  <div class="shuffle-note">出題順はランダムです</div>
+  <div class="link-row"><a href="index.html">一問一答モードへ</a></div>
+</div>
+<div id="quizView" class="quiz-area hidden">
+  <div class="chapter-label" id="chapterLabel"></div>
+  <div class="q-number" id="qNumber"></div>
+  <div class="card" id="cardText"></div>
+  <div class="source" id="sourceText"></div>
+  <button class="reveal-btn" id="revealBtn" onclick="revealAll()">答えを表示</button>
+  <div class="judge-row" id="judgeRow">
+    <button class="judge-btn judge-ok" onclick="judge(true)">覚えていた</button>
+    <button class="judge-btn judge-ng" onclick="judge(false)">覚えていなかった</button>
+  </div>
+  <button class="next-btn" id="nextBtn" onclick="nextQ()">次の問題へ</button>
+  <button class="menu-back" onclick="backToMenu()">メニューに戻る</button>
+</div>
+<div id="resultView" class="quiz-area hidden">
+  <div class="result-card">
+    <div style="font-size:18px;font-weight:600;">結果</div>
+    <div class="result-score" id="resultScore"></div>
+    <div class="result-text" id="resultText"></div>
+    <button class="retry-btn" onclick="retryWrong()">覚えていなかった問題を復習</button>
+    <button class="back-btn" onclick="backToMenu()">メニューに戻る</button>
+  </div>
+</div>
+<script>
+const Q={
+def1:[
+{cat:"第1章",text:"不動産の価格は、一般に、(1)その不動産に対してわれわれが認める【効用】、(2)その不動産の【相対的稀少性】、(3)その不動産に対する【有効需要】の三者の相関結合によって生ずる【経済価値】を貨幣額で表示したものである。",src:"総論第1章 II"},
+{cat:"第1章",text:"この不動産のあり方は、【自然的】、【社会的】、【経済的】及び【行政的】な要因の相互作用によって決定されるとともに【経済価値の本質】を決定づけている。",src:"総論第1章 I"},
+{cat:"第1章",text:"不動産の鑑定評価とは、現実の社会経済情勢の下で合理的と考えられる市場で形成されるであろう【市場価値】を表示する【適正な価格】を、不動産鑑定士が的確に把握する作業に代表される。",src:"総論第1章 IV"},
+{cat:"第1章",text:"不動産の鑑定評価とは、不動産の価格に関する専門家の【判断】であり、【意見】であるといってよいであろう。",src:"総論第1章 IV"},
+{cat:"第1章",text:"鑑定評価の判断の当否は、不動産鑑定士の能力の【如何】及びその能力の行使の【誠実さ】の如何に係るものである。",src:"総論第1章 IV"},
+{cat:"第1章",text:"鑑定評価は、高度な【知識】と豊富な【経験】及び的確な【判断力】を持ち、さらに、これらが【有機的】かつ【総合的】に発揮できる練達堪能な専門家によってなされるとき、初めて合理的であって、客観的に論証できるものとなる。",src:"総論第1章 IV"},
+{cat:"第1章",text:"土地の自然的特性は【固定的】であって【硬直的】であり、人文的特性は【可変的】であって【伸縮的】である。",src:"総論第1章 III"},
+{cat:"第1章",text:"不動産の価格（又は賃料）は、通常、【過去】と【将来】とにわたる長期的な考慮の下に形成される。",src:"総論第1章 II"},
+{cat:"第1章",text:"不動産鑑定士は、【良心】に従い、誠実に不動産の鑑定評価を行い、専門職業家としての【社会的信用】を傷つけるような行為をしてはならない。",src:"総論第1章 V"},
+{cat:"第1章",text:"不動産鑑定士は、正当な理由がなくて、その職務上取り扱ったことについて知り得た【秘密】を他に漏らしてはならない。",src:"総論第1章 V"},
+{cat:"第1章",text:"縁故若しくは特別の利害関係を有する場合等、公平な鑑定評価を害する恐れのあるときは、【原則として】不動産の鑑定評価を引き受けてはならない。",src:"総論第1章 V (5)"},
+{cat:"第1章",text:"不動産の価格と賃料との間には、いわゆる【元本】と【果実】との間に認められる相関関係を認めることができる。",src:"総論第1章 II"},
+{cat:"第1章",text:"不動産は地域の【構成分子】として地域との間に【依存】、【補完】等の関係にたち、地域内の他の不動産との間に【協働】、【代替】、【競争】等の関係にたつ。",src:"総論第1章 III"},
+{cat:"第1章",text:"判断の当否は、必要な関連諸資料の【収集整理】の適否及びこれらの諸資料の分析解釈の【練達の程度】に依存するものである。",src:"総論第1章 IV"},
+{cat:"第1章",text:"不動産鑑定士は、依頼者に対して鑑定評価の結果を分かり易く【誠実に説明】を行い得るようにするとともに、社会一般に対しても不動産の鑑定評価に対する【信頼を高める】よう努めなければならない。",src:"総論第1章 V"}
+],
+def2:[
+{cat:"第2章",text:"不動産の【種別】とは、不動産の【用途】に関して区分される不動産の分類をいう。",src:"総論第2章"},
+{cat:"第2章",text:"不動産の【類型】とは、その【有形的利用】及び【権利関係】の態様に応じて区分される不動産の分類をいう。",src:"総論第2章"},
+{cat:"第2章",text:"【宅地地域】とは、居住、商業活動、工業生産活動等の用に供される建物、構築物等の敷地の用に供されることが、自然的、社会的、経済的及び行政的観点からみて合理的と判断される地域をいう。",src:"総論第2章 I"},
+{cat:"第2章",text:"【農地地域】とは、農業生産活動のうち耕作の用に供されることが、自然的、社会的、経済的及び行政的観点からみて合理的と判断される地域をいう。",src:"総論第2章 I"},
+{cat:"第2章",text:"【林地地域】とは、林業生産活動のうち【木竹又は特用林産物】の生育の用に供されることが合理的と判断される地域をいう。",src:"総論第2章 I"},
+{cat:"第2章",text:"【更地】とは、建物等の定着物がなく、かつ、使用収益を制約する【権利の付着していない】宅地をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"【建付地】とは、建物等の用に供されている敷地で建物等及びその敷地が【同一の所有者】に属している宅地をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"【借地権】とは、借地借家法（廃止前の借地法を含む。）に基づく借地権（建物の所有を目的とする【地上権】又は土地の【賃借権】）をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"【底地】とは、宅地について【借地権】の付着している場合における当該宅地の【所有権】をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"【区分地上権】とは、工作物を所有するため、【地下又は空間】に上下の範囲を定めて設定された地上権をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"【見込地】とは、宅地地域、農地地域、林地地域等の【相互間】において、ある種別の地域から他の種別の地域へと転換しつつある地域内の土地をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"【移行地】とは、宅地地域、農地地域等のうちにあって、【細分された地域】相互の間で地域の移行が認められる状態にある土地をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"自用の建物及びその敷地とは、建物所有者とその敷地の所有者とが同一であり、その所有者による【使用収益】を制約する権利の付着していない場合における当該建物及びその敷地をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"貸家及びその敷地とは、建物所有者とその敷地の所有者とが同一であり、その建物が賃貸借に供されている場合における当該【建物及びその敷地】をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"【借地権付建物】とは、借地権を権原とする建物が存する場合における当該建物及び【借地権】をいう。",src:"総論第2章 II"},
+{cat:"第2章",text:"建物及びその敷地の類型は、【自用の建物及びその敷地】、【貸家及びその敷地】、【借地権付建物】、【区分所有建物及びその敷地】の4つである。",src:"総論第2章 II"},
+{cat:"第2章",text:"宅地の類型は、【更地】、【建付地】、【借地権】、【底地】、【区分地上権】に加え、【区分所有権】が含まれる。",src:"総論第2章 II"},
+{cat:"第2章",text:"不動産の種別と類型の【両面】の分析をまって初めて精度の高い鑑定評価が可能となる。",src:"総論第2章"},
+{cat:"第2章",text:"地域の種別は、【宅地地域】、【農地地域】、【林地地域】等に分けられる。見込地地域は地域の種別ではない。",src:"総論第2章 I"},
+{cat:"第2章",text:"【借家権】とは、借地借家法（廃止前の借家法を含む。）が適用される建物の【賃借権】をいう。",src:"各論第1章"}
+],
+def3:[
+{cat:"第3章",text:"【価格形成要因】とは、不動産の【効用】及び【相対的稀少性】並びに不動産に対する【有効需要】の三者に影響を与える要因をいう。",src:"総論第3章"},
+{cat:"第3章",text:"【一般的要因】とは、一般経済社会における不動産のあり方及びその価格の水準に影響を与える要因をいう。それは、【自然的要因】、【社会的要因】、【経済的要因】及び【行政的要因】に大別される。",src:"総論第3章 I"},
+{cat:"第3章",text:"【地域要因】とは、【一般的要因】の相関結合によって規模、構成の内容、機能等にわたる各地域の特性を形成し、その地域に属する不動産の価格の形成に【全般的な影響】を与える要因をいう。",src:"総論第3章 II"},
+{cat:"第3章",text:"【個別的要因】とは、不動産に【個別性】を生じさせ、その価格を【個別的に形成】する要因をいう。",src:"総論第3章 III"},
+{cat:"第3章",text:"鑑定評価を行うに当たっては、価格形成要因を【市場参加者】の観点から明確に把握し、その推移・動向・諸要因間の【相互関係】を十分に分析する必要がある。",src:"総論第3章（H26改正）"},
+{cat:"第3章",text:"行政的要因の主なものは、(1)土地利用に関する【計画及び規制】の状態、(2)土地及び建築物の構造、防災等に関する規制の状態、(3)宅地及び住宅に関する施策の状態、(4)不動産に関する【税制】の状態、(5)不動産の【取引に関する規制】の状態である。",src:"総論第3章 I IV"},
+{cat:"第3章",text:"社会的要因の主なものは、人口の状態、家族構成及び世帯分離の状態、都市形成及び【公共施設】の整備の状態、教育及び社会福祉の状態、不動産の取引及び【使用収益の慣行】、建築様式等の状態、【情報化】の進展の状態、【生活様式】等の状態である。",src:"総論第3章 I II"},
+{cat:"第3章",text:"経済的要因の主なものは、貯蓄、消費、投資及び【国際収支】の状態、【財政】及び金融の状態、物価、雇用、賃金の状態、【税負担】の状態、企業活動の状態、技術革新及び【産業構造】の状態、交通体系の状態、【国際化】の状態である。",src:"総論第3章 I III"},
+{cat:"第3章",text:"見込地及び移行地については、転換・移行の程度が低い場合は転換前・移行前の【個別的要因】をより重視し、程度が高い場合は転換後・移行後の個別的要因をより重視すべきである。",src:"総論第3章 留意事項"},
+{cat:"第3章",text:"一般的要因の分析については、必ずしも鑑定評価報告書に【記載する必要がない】とされている。",src:"総論第3章 留意事項"}
+],
+def4:[
+{cat:"第5章",text:"【正常価格】とは、市場性を有する不動産について、現実の社会経済情勢の下で合理的と考えられる条件を満たす市場で形成されるであろう【市場価値】を表示する適正な価格をいう。",src:"総論第5章 III"},
+{cat:"第5章",text:"正常価格の市場の条件は、(1)市場参加者が【自由意思】に基づいて市場に参加し、(2)売り急ぎ、買い進み等をもたらす【特別な動機】のないこと、(3)対象不動産が【相当の期間】市場に公開されていること、(4)取引形態が特に制約されたり特別な動機がないことである。",src:"総論第5章 III"},
+{cat:"第5章",text:"【通常の資金調達能力】とは、市場における標準的な借入条件の下での【借り入れ】と【自己資金】とによって資金調達を行うことができる能力をいう。",src:"総論第5章 留意事項"},
+{cat:"第5章",text:"【相当の期間】とは、対象不動産の取得に際し必要となる情報が公開され、【需要者層】に十分浸透するまでの期間をいう。",src:"総論第5章 留意事項"},
+{cat:"第5章",text:"公開されていることとは、【価格時点】において既に市場で公開されていた状況を想定することをいう。",src:"総論第5章 留意事項"},
+{cat:"第5章",text:"【限定価格】とは、市場性を有する不動産について、不動産と取得する他の不動産との併合又は不動産の一部を取得する際の分割等に基づき正常価格と同一の市場概念の下において形成されるであろう【市場価値と乖離】することにより、市場が相対的に限定される場合における取得部分の当該市場限定に基づく市場価値を適正に表示する価格をいう。",src:"総論第5章 III"},
+{cat:"第5章",text:"【特定価格】とは、市場性を有する不動産について、【法令等】による社会的要請を背景とする評価目的の下で、正常価格の前提となる諸条件を満たさない場合における不動産の経済価値を適正に表示する価格をいう。",src:"総論第5章 III"},
+{cat:"第5章",text:"【特殊価格】とは、【文化財】等の一般的に市場性を有しない不動産について、その利用現況等を前提とした不動産の経済価値を適正に表示する価格をいう。",src:"総論第5章 III"},
+{cat:"第5章",text:"【正常賃料】とは、正常価格と同一の【市場概念】の下において新たな賃貸借等の契約において成立するであろう経済価値を表示する適正な賃料（【新規賃料】）をいう。",src:"総論第5章 III"},
+{cat:"第5章",text:"【限定賃料】とは、限定価格と同一の市場概念の下において新たな賃貸借等の契約において成立するであろう経済価値を適正に表示する賃料（新規賃料）をいう。",src:"総論第5章 III"},
+{cat:"第5章",text:"【継続賃料】とは、不動産の賃貸借等の継続に係る【特定の当事者間】において成立するであろう経済価値を適正に表示する賃料をいう。",src:"総論第5章 III"},
+{cat:"第5章",text:"【実質賃料】とは、賃料の種類の如何を問わず賃貸人等に支払われる賃料の算定期間に対応する適正な【すべての経済的対価】をいい、【純賃料】及び【必要諸経費等】から成る。",src:"総論第7章"},
+{cat:"第5章",text:"【支払賃料】とは、各支払時期に支払われる賃料をいい、契約に当たって一時金が授受される場合には、当該一時金の【運用益】及び【償却額】を加算した実質賃料から支払賃料が求められる。",src:"総論第7章"},
+{cat:"第5章",text:"賃料の算定の期間は、宅地並びに建物及びその敷地の賃料にあっては原則【1月】を単位とし、その他の土地にあっては【1年】を単位とする。",src:"総論第7章"},
+{cat:"第5章",text:"賃料の価格時点は、賃料の算定の期間の【期首】となる。",src:"総論第5章 留意事項"}
+],
+def5:[
+{cat:"第7章",text:"鑑定評価の三方式は、原価方式は不動産の【再調達原価】に着目して、比較方式は不動産の【取引事例】又は賃貸借等の事例に着目して、収益方式は不動産から生み出される【収益】に着目して、それぞれ分析を行うものである。",src:"総論第7章"},
+{cat:"第7章",text:"【再調達原価】とは、対象不動産を価格時点において再調達することを想定した場合において必要とされる【適正な原価の総額】をいう。",src:"総論第7章 I"},
+{cat:"第7章",text:"減価修正の方法には【耐用年数に基づく方法】と【観察減価法】があり、これらを【併用】するものとする。",src:"総論第7章 I"},
+{cat:"第7章",text:"減価の要因は、【物理的要因】、【機能的要因】及び【経済的要因】に分けられる。",src:"総論第7章 I"},
+{cat:"第7章",text:"【経済的残存耐用年数】とは、価格時点において、対象不動産の効用が十分に持続すると考えられる期間をいい、耐用年数に基づく方法の適用に当たり特に【重視】されるべきものである。",src:"総論第7章 留意事項"},
+{cat:"第7章",text:"耐用年数に基づく方法は、対象不動産の価格時点における【経過年数】及び【経済的残存耐用年数】の和として把握される耐用年数を基礎とする。",src:"総論第7章 I"},
+{cat:"第7章",text:"収益還元法は、【直接還元法】と【DCF法】に大別される。",src:"総論第7章 III"},
+{cat:"第7章",text:"還元利回りの求め方として、R＝Y－gの式は【割引率】との関係から求める方法である。",src:"総論第7章 III"},
+{cat:"第7章",text:"還元利回りの求め方として、R＝RM×WM＋RE×WEの式は【借入金】と【自己資金】に係る還元利回りから求める方法である。",src:"総論第7章 III"},
+{cat:"第7章",text:"【復帰価格】とは、保有期間の満了時点における対象不動産の価格をいう。",src:"総論第7章 留意事項"},
+{cat:"第7章",text:"【基礎価格】とは、積算賃料を求めるための基礎となる【価格】をいう。",src:"総論第7章 IV"},
+{cat:"第7章",text:"【期待利回り】とは、賃貸借等に供する不動産を取得するために要した資本に相当する額に対する【純賃料】の割合をいう。",src:"総論第7章 IV"},
+{cat:"第7章",text:"新規賃料の鑑定評価手法は、【積算法】、【賃貸事例比較法】、【収益分析法】及び【賃貸事業分析法】である。",src:"総論第7章 IV"},
+{cat:"第7章",text:"継続賃料の鑑定評価手法は、【差額配分法】、【利回り法】、【スライド法】及び【賃貸事例比較法】である。",src:"総論第7章 IV"},
+{cat:"第7章",text:"DCF法における保有期間は、毎期の純収益及び復帰価格について精度の高い【予測】が可能な期間として決定し、【典型的な投資家】が保有する期間を標準とする。",src:"総論第7章 留意事項"}
+],
+def6:[
+{cat:"第6章",text:"【地域分析】とは、その対象不動産がどのような地域に存するか、その地域はどのような特性を有するか、その地域の標準的な土地の利用形態（【標準的使用】）は何かを判定することをいう。",src:"総論第6章 I"},
+{cat:"第6章",text:"【近隣地域】とは、対象不動産の属する用途的地域であって、より大きな規模と内容とを持つ【地域】である都市あるいは農村等の内部にあって、居住、商業活動、工業生産活動等人の生活と活動とに関して、ある特定の用途に供されることを中心として【地域的にまとまり】を示している地域をいう。",src:"総論第6章 留意事項"},
+{cat:"第6章",text:"【類似地域】とは、近隣地域の地域の特性と【類似する特性】を有する地域をいう。",src:"総論第6章 留意事項"},
+{cat:"第6章",text:"【同一需給圏】とは、一般に対象不動産と【代替関係】が成立して、その価格の形成について相互に影響を及ぼすような関係にある他の不動産の存する圏域をいう。それは、【近隣地域】を含んでより広域的である。",src:"総論第6章 留意事項"},
+{cat:"第6章",text:"近隣地域の特性は、通常、その地域に属する不動産の一般的な【標準的使用】に具体的に現れる。",src:"総論第6章 I"},
+{cat:"第6章",text:"【個別分析】とは、対象不動産の個別的要因が対象不動産の利用形態と価格形成についてどのような影響力を持っているかを分析して、対象不動産の【最有効使用】を判定することをいう。",src:"総論第6章 II"},
+{cat:"第6章",text:"住宅地の同一需給圏は一般に都心への【通勤可能】な地域の範囲に一致する傾向があるが、【地縁的選好性】により狭められる傾向がある。",src:"総論第6章 留意事項"},
+{cat:"第6章",text:"高度商業地の同一需給圏は広域的な【商業背後地】を基礎に成り立つものであり、その地域的範囲は全国的規模となる場合もある。",src:"総論第6章 留意事項"},
+{cat:"第6章",text:"大工場地の同一需給圏は、一般に高度の【輸送機関】に関して代替性を有する範囲で全国的規模となる傾向がある。",src:"総論第6章 留意事項"},
+{cat:"第6章",text:"市場の特性の把握は、【標準的使用】の判定だけでなく、手法の適用や試算価格の【調整】等にも反映すべきである。",src:"総論第6章 I"}
+],
+prin:[
+{cat:"第4章",text:"【需要と供給の原則】：不動産の価格もその需要と供給との相互関係によって定まるが、不動産は他の財と異なる【自然的特性】及び【人文的特性】を有するために、その需要と供給及び価格の形成にはこれらの特性の反映が認められる。",src:"総論第4章 I"},
+{cat:"第4章",text:"【変動の原則】：価格形成要因が常に【変動の過程】にあることを認識して、各要因間の相互因果関係を【動的に】把握すべきである。",src:"総論第4章 II"},
+{cat:"第4章",text:"【代替の原則】：不動産の価格も【代替可能な他の不動産又は財】の価格と相互に関連して形成される。",src:"総論第4章 III"},
+{cat:"第4章",text:"【最有効使用の原則】：不動産の価格は、その不動産の効用が【最高度】に発揮される可能性に最も富む使用を前提として把握される価格を標準として形成される。",src:"総論第4章 IV"},
+{cat:"第4章",text:"最有効使用は、現実の社会経済情勢の下で【客観的に】みて、【良識】と【通常の使用能力】を持つ人による合理的かつ【合法的】な最高最善の使用方法に基づくものである。",src:"総論第4章 IV"},
+{cat:"第4章",text:"【均衡の原則】：不動産の収益性又は快適性が最高度に発揮されるためには、その【構成要素の組合せ】が均衡を得ていることが必要である。",src:"総論第4章 V"},
+{cat:"第4章",text:"【収益逓増及び逓減の原則】：追加する単位投資額に対応する収益は、ある点までは【増加】するが、その後は【減少】する。",src:"総論第4章 VI"},
+{cat:"第4章",text:"【収益配分の原則】：土地、資本、労働及び経営（組織）の各要素の結合によって生ずる総収益のうち、資本、労働及び経営に配分される部分以外の部分は【土地】に帰属する。",src:"総論第4章 VII"},
+{cat:"第4章",text:"【寄与の原則】：不動産のある部分がその不動産全体の【収益獲得】に寄与する度合いは、その不動産全体の価格に影響を及ぼす。",src:"総論第4章 VIII"},
+{cat:"第4章",text:"【適合の原則】：不動産の収益性又は快適性が最高度に発揮されるためには、当該不動産がその【環境】に適合していることが必要である。",src:"総論第4章 IX"},
+{cat:"第4章",text:"【競争の原則】：超過利潤は【競争】を惹起し、競争は超過利潤を【減少】させ、終局的にはこれを【消滅】させる傾向を持つ。",src:"総論第4章 X"},
+{cat:"第4章",text:"【予測の原則】：不動産の価格も、価格形成要因の変動についての【市場参加者】による予測によって左右される。",src:"総論第4章 XI"}
+],
+cond:[
+{cat:"第5章",text:"鑑定評価の条件は、(1)【対象確定条件】、(2)地域要因又は個別的要因についての【想定上の条件】、(3)【調査範囲等条件】の3つに分類される。",src:"総論第5章 II〜IV"},
+{cat:"第5章",text:"対象確定条件を設定するに当たっては、鑑定評価書の【利用者の利益】を害するおそれがないかどうかの観点から当該条件設定の妥当性を確認しなければならない。",src:"総論第5章 II"},
+{cat:"第5章",text:"想定上の条件は、鑑定評価書の利用者の利益を害するおそれがないかどうかの観点に加え、特に【実現性】及び【合法性】の観点から妥当なものでなければならない。",src:"総論第5章 III"},
+{cat:"第5章",text:"【合法性】とは、【公法上】及び【私法上】の諸規制に反しないことをいう。",src:"総論第5章 留意事項"},
+{cat:"第8章",text:"鑑定評価の手順は、【基本的事項の確定】に始まり、【鑑定評価報告書の作成】をもって終了する。",src:"総論第8章"},
+{cat:"第8章",text:"【試算価格又は試算賃料の調整】とは、鑑定評価の複数の手法により求められた各試算価格又は試算賃料の【再吟味】及び各試算価格又は試算賃料が有する【説得力に係る判断】を行い、鑑定評価額の決定に導く作業をいう。",src:"総論第8章 III"},
+{cat:"第8章",text:"【確認資料】とは、不動産の【物的確認】及び【権利の態様】の確認に必要な資料をいう。",src:"総論第8章 留意事項"},
+{cat:"第8章",text:"【要因資料】とは、【価格形成要因】に照応する資料をいう。",src:"総論第8章 留意事項"},
+{cat:"第8章",text:"【事例資料】とは、鑑定評価の手法の適用に必要とされる現実の【取引価格】、【賃料】等に関する資料をいう。",src:"総論第8章 留意事項"},
+{cat:"第9章",text:"鑑定評価報告書は、鑑定評価の基本的事項及び鑑定評価額を表し、鑑定評価額を決定した【理由を説明】し、その不動産の鑑定評価に関与した不動産鑑定士の【責任の所在】を示すことを主旨とする。",src:"総論第9章 I"},
+{cat:"第9章",text:"建物及びその敷地の鑑定評価では、鑑定評価報告書に建物及びその敷地の最有効使用に加え、【更地としての最有効使用】も記載しなければならない。",src:"総論第9章 II"},
+{cat:"第9章",text:"特定価格を求めた場合には【法令等による社会的要請の根拠】を明らかにし、特殊価格を求めた場合には【文化財の指定の事実等】を明らかにしなければならない。",src:"総論第9章 II"},
+{cat:"第9章",text:"利害関係等がない場合も【ない旨】の記載が必要である。",src:"総論第9章 II"}
+]
+};
+
+const catNames={def1:'不動産・価格の定義',def2:'種別・類型の定義',def3:'価格形成要因の定義',def4:'価格・賃料の種類の定義',def5:'鑑定評価の方式の定義',def6:'地域分析・個別分析の定義',prin:'価格に関する諸原則',cond:'条件設定・手順・報告書'};
+let curCat='',qs=[],idx=0,sc=0,wl=[],retry=false;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function startQuiz(cat){
+  curCat=cat;retry=false;
+  if(cat==='all'){
+    qs=[];for(const k of Object.keys(Q))Q[k].forEach(q=>qs.push({...q}));
+  }else{
+    qs=Q[cat].map(q=>({...q}));
+  }
+  shuffle(qs);idx=0;sc=0;wl=[];showQuiz();
+}
+
+function retryWrong(){if(!wl.length){backToMenu();return}retry=true;qs=[...wl];shuffle(qs);idx=0;sc=0;wl=[];showQuiz()}
+
+function showQuiz(){
+  document.getElementById('menuView').classList.add('hidden');
+  document.getElementById('resultView').classList.add('hidden');
+  document.getElementById('quizView').classList.remove('hidden');
+  document.getElementById('progressBar').style.display='block';
+  showQ();
+}
+
+function showQ(){
+  const q=qs[idx];
+  document.getElementById('chapterLabel').textContent=q.cat;
+  document.getElementById('qNumber').textContent=`問 ${idx+1} / ${qs.length}`;
+  document.getElementById('headerSub').textContent=retry?'復習モード':(curCat==='all'?'全問まとめ':(catNames[curCat]||''));
+  document.getElementById('sourceText').textContent='出典: '+q.src;
+  // Parse text with 【】 as blanks
+  const html=q.text.replace(/【(.*?)】/g,function(m,p1){
+    return '<span class="blank" data-answer="'+p1.replace(/"/g,'&quot;')+'">'+p1.replace(/./g,'_')+'</span>';
+  });
+  document.getElementById('cardText').innerHTML=html;
+  document.getElementById('revealBtn').style.display='block';
+  document.getElementById('judgeRow').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+  document.getElementById('progressFill').style.width=(idx/qs.length*100)+'%';
+  window.scrollTo(0,0);
+}
+
+function revealAll(){
+  document.querySelectorAll('.blank').forEach(el=>{
+    el.textContent=el.dataset.answer;
+    el.classList.add('revealed');
+  });
+  document.getElementById('revealBtn').style.display='none';
+  document.getElementById('judgeRow').style.display='flex';
+}
+
+function judge(ok){
+  if(ok)sc++;else wl.push(qs[idx]);
+  document.getElementById('judgeRow').style.display='none';
+  document.getElementById('nextBtn').style.display='block';
+  document.getElementById('nextBtn').textContent=idx<qs.length-1?'次の問題へ':'結果を見る';
+}
+
+function nextQ(){idx++;if(idx>=qs.length)showResult();else showQ()}
+
+function showResult(){
+  document.getElementById('quizView').classList.add('hidden');
+  document.getElementById('resultView').classList.remove('hidden');
+  document.getElementById('progressBar').style.display='none';
+  document.getElementById('resultScore').textContent=sc+' / '+qs.length;
+  const p=Math.round(sc/qs.length*100);
+  document.getElementById('resultText').textContent=`暗記率 ${p}%　${p===100?'完璧です！':p>=80?'よく覚えています！':p>=60?'もう少し！':'繰り返し復習しましょう！'}`;
+  document.getElementById('headerSub').textContent='結果';
+}
+
+function backToMenu(){
+  document.getElementById('quizView').classList.add('hidden');
+  document.getElementById('resultView').classList.add('hidden');
+  document.getElementById('menuView').classList.remove('hidden');
+  document.getElementById('progressBar').style.display='none';
+  document.getElementById('headerSub').textContent='定義・原則を覚えよう';
+}
+
+// Count total
+let total=0;for(const k of Object.keys(Q))total+=Q[k].length;
+document.getElementById('totalBadge').textContent=total+'問';
+</script>
+</body>
+</html>
