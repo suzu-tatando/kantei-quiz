@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>鑑定理論 手法の重み付け</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;padding-bottom:40px}
+.header{background:linear-gradient(135deg,#1565c0,#0d47a1);color:#fff;padding:14px 16px;text-align:center;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.header h1{font-size:17px;font-weight:700}
+.header .sub{font-size:11px;opacity:.85;margin-top:3px}
+.pb{height:4px;background:rgba(255,255,255,.3);margin-top:8px;border-radius:2px;overflow:hidden}
+.pbf{height:100%;background:#fff;border-radius:2px;transition:width .3s}
+/* MENU */
+.menu{padding:14px;max-width:600px;margin:0 auto}
+.menu-title{font-size:19px;font-weight:700;text-align:center;margin:10px 0 4px;color:#1565c0}
+.msec{font-size:12px;font-weight:600;color:#666;margin:12px 0 4px 4px;text-transform:uppercase;letter-spacing:.5px}
+.mbtn{display:flex;align-items:center;justify-content:space-between;background:#fff;border:none;border-radius:12px;padding:13px 16px;font-size:14px;font-weight:600;color:#333;box-shadow:0 1px 4px rgba(0,0,0,.08);cursor:pointer;width:100%;text-align:left;margin-bottom:8px}
+.mbtn:active{transform:scale(.98)}
+.mbtn .arr{color:#aaa;font-size:18px;margin-left:8px;flex-shrink:0}
+.mbtn .badge{background:#1565c0;color:#fff;font-size:11px;padding:2px 7px;border-radius:10px;margin-left:6px;flex-shrink:0}
+.mbtn-all{background:#e3f2fd}
+.mbtn-all .badge{background:#1565c0}
+.snote{text-align:center;font-size:12px;color:#999;margin-top:6px}
+.link-row{text-align:center;margin-top:10px}
+.link-row a{color:#1565c0;font-size:13px;text-decoration:none;font-weight:600;margin:0 8px}
+/* QUIZ */
+.qa{padding:14px;max-width:600px;margin:0 auto}
+.qmeta{font-size:12px;color:#1565c0;font-weight:600;margin-bottom:2px}
+.qnum{font-size:13px;color:#888;margin-bottom:10px}
+.qtitle{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:12px}
+.qtitle .qname{font-size:18px;font-weight:700;color:#1565c0}
+.qtitle .qsub{font-size:13px;color:#555;margin-top:4px}
+.instruction{font-size:12px;color:#888;margin-bottom:10px;text-align:center;line-height:1.5}
+.items-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.item-card{background:#fff;border-radius:12px;padding:13px 14px;box-shadow:0 1px 6px rgba(0,0,0,.07);cursor:pointer;display:flex;align-items:flex-start;gap:10px;border:2px solid transparent;transition:all .15s;position:relative;user-select:none;-webkit-tap-highlight-color:transparent}
+.item-card:active{transform:scale(.98)}
+.item-card.selected{border-color:#1565c0;background:#e8f0fe}
+.item-card.correct{border-color:#2e7d32;background:#e8f5e9}
+.item-card.wrong-early{border-color:#c62828;background:#fce4ec}
+.item-card.missed{border-color:#f57c00;background:#fff3e0}
+.item-num{width:28px;height:28px;border-radius:50%;background:#1565c0;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0;transition:opacity .15s}
+.item-num.visible{opacity:1}
+.item-text{font-size:13px;line-height:1.55;flex:1;color:#333}
+.item-group-label{font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:4px;display:inline-block}
+.gl-1{background:#1565c0;color:#fff}
+.gl-2{background:#6a1b9a;color:#fff}
+.gl-3{background:#e65100;color:#fff}
+.btn-row{display:flex;gap:8px;margin-bottom:10px}
+.btn-check{flex:1;padding:14px;background:#1565c0;color:#fff;font-size:15px;font-weight:600;border:none;border-radius:12px;cursor:pointer}
+.btn-check:disabled{opacity:.4;cursor:default}
+.btn-reset{padding:14px 16px;background:#fff;color:#666;font-size:15px;font-weight:600;border:1px solid #ddd;border-radius:12px;cursor:pointer}
+.result-box{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);margin-bottom:12px;display:none}
+.result-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.result-title.ok{color:#2e7d32}
+.result-title.ng{color:#c62828}
+.result-phrase{font-size:12px;color:#555;line-height:1.6;border-left:3px solid #1565c0;padding-left:10px;margin-top:10px}
+.group-block{margin-top:12px}
+.group-block .glabel{font-size:12px;font-weight:700;margin-bottom:6px;padding:4px 10px;border-radius:6px;display:inline-block}
+.group-items{list-style:none;padding-left:4px}
+.group-items li{font-size:13px;padding:3px 0 3px 12px;border-left:2px solid #ccc;color:#444;line-height:1.5}
+.btn-next{width:100%;padding:14px;background:#1565c0;color:#fff;font-size:15px;font-weight:600;border:none;border-radius:12px;cursor:pointer;display:none;margin-bottom:8px}
+.btn-back{width:100%;padding:12px;background:#fff;color:#666;font-size:14px;font-weight:600;border:1px solid #ddd;border-radius:12px;cursor:pointer}
+/* RESULT VIEW */
+.rv{padding:14px;max-width:600px;margin:0 auto}
+.res-card{background:#fff;border-radius:16px;padding:28px 20px;box-shadow:0 2px 12px rgba(0,0,0,.08);text-align:center}
+.res-score{font-size:48px;font-weight:700;color:#1565c0;margin:14px 0}
+.res-text{font-size:15px;color:#666;margin-bottom:20px}
+.res-retry{display:inline-block;padding:12px 28px;background:#fff;color:#1565c0;font-size:14px;font-weight:600;border:2px solid #1565c0;border-radius:12px;cursor:pointer;margin:6px}
+.res-back{display:inline-block;padding:12px 28px;background:#1565c0;color:#fff;font-size:14px;font-weight:600;border:none;border-radius:12px;cursor:pointer;margin:6px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>鑑定理論 手法の重み付け</h1>
+  <div class="sub" id="hSub">各論1・2章 評価手法の優先順位</div>
+  <div class="pb" id="pb" style="display:none"><div class="pbf" id="pbf" style="width:0%"></div></div>
+</div>
+
+<!-- MENU -->
+<div id="menuView" class="menu">
+  <div class="menu-title">カテゴリを選択</div>
+  <div class="msec">価格（各論第1章）</div>
+  <button class="mbtn" onclick="start('land')"><span>宅地（土地類型）<span class="badge">6問</span></span><span class="arr">›</span></button>
+  <button class="mbtn" onclick="start('other_land')"><span>農地・林地・宅地見込地<span class="badge">4問</span></span><span class="arr">›</span></button>
+  <button class="mbtn" onclick="start('bldg')"><span>建物及びその敷地<span class="badge">6問</span></span><span class="arr">›</span></button>
+  <button class="mbtn" onclick="start('bldg_only')"><span>建物・借家権<span class="badge">4問</span></span><span class="arr">›</span></button>
+  <button class="mbtn" onclick="start('tokutei')"><span>特定価格<span class="badge">3問</span></span><span class="arr">›</span></button>
+  <div class="msec">賃料（各論第2章）</div>
+  <button class="mbtn" onclick="start('rent')"><span>賃料（新規・限定・継続・建物）<span class="badge">4問</span></span><span class="arr">›</span></button>
+  <div class="msec">まとめ</div>
+  <button class="mbtn mbtn-all" onclick="start('all')">
+    <span style="color:#1565c0">全問まとめて挑戦<span class="badge">27問</span></span>
+    <span class="arr" style="color:#1565c0">›</span>
+  </button>
+  <div class="snote">優先度の高い順にタップ→答え合わせ</div>
+  <div class="link-row">
+    <a href="index.html">一問一答へ</a>
+    <a href="anki.html">穴埋め暗記へ</a>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div id="quizView" class="qa hidden">
+  <div class="qmeta" id="qMeta"></div>
+  <div class="qnum" id="qNum"></div>
+  <div class="qtitle">
+    <div class="qname" id="qName"></div>
+    <div class="qsub" id="qSub" style="display:none"></div>
+  </div>
+  <div class="instruction">優先度の高い順にタップしてください<br>同じ優先度の手法は順番不問です</div>
+  <div class="items-grid" id="itemsGrid"></div>
+  <div class="btn-row">
+    <button class="btn-reset" onclick="resetSel()">リセット</button>
+    <button class="btn-check" id="btnCheck" onclick="checkAnswer()" disabled>答え合わせ</button>
+  </div>
+  <div class="result-box" id="resultBox"></div>
+  <button class="btn-next" id="btnNext" onclick="nextQ()">次の問題へ</button>
+  <button class="btn-back" onclick="backToMenu()">メニューに戻る</button>
+</div>
+
+<!-- RESULT -->
+<div id="resultView" class="rv hidden">
+  <div class="res-card">
+    <div style="font-size:17px;font-weight:600">結果</div>
+    <div class="res-score" id="resScore"></div>
+    <div class="res-text" id="resText"></div>
+    <button class="res-retry" onclick="retryWrong()">不正解問題を復習</button>
+    <button class="res-back" onclick="backToMenu()">メニューに戻る</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA: groups[i] = {label, glClass, items[]}
+// group 1 = 標準, group 2 = 比較考量, group 3 = 積算(参考)
+// Within a group, any tap order is correct
+// ============================================================
+const ALL = [
+
+// ---- 宅地（土地類型）----
+{id:'L01', cat:'宅地（土地類型）', name:'更地', sub:null,
+ phrase:'更地並びに配分法が適用できる場合における建物及びその敷地の取引事例に基づく比準価格並びに土地残余法による収益価格を関連づけて決定するものとする。再調達原価が把握できる場合には積算価格をも関連づけ、面積が大きい場合はさらに開発法を比較考量する。',
+ groups:[
+  {label:'①標準（関連づけ）', gl:'gl-1', items:[
+    '比準価格（更地取引事例及び配分法適用の建物・敷地の取引事例に基づく）',
+    '土地残余法による収益価格',
+    '積算価格（再調達原価が把握できる場合）'
+  ]},
+  {label:'②面積大の場合さらに比較考量', gl:'gl-2', items:[
+    '開発法（面積が標準より大きい場合）'
+  ]}
+]},
+
+{id:'L02', cat:'宅地（土地類型）', name:'建付地', sub:null,
+ phrase:'更地の価格をもとに最有効使用との格差・更地化の難易・敷地と建物等の関連性を考慮して求めた価格を標準とし、配分法に基づく比準価格及び土地残余法による収益価格を比較考量して決定する。なお、複合不動産価格をもとに敷地に帰属する額を配分して求めた価格を標準とすることもできる。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:[
+    '更地の価格基礎に最有効使用との格差・更地化難易度・敷地と建物等の関連性を考慮した価格（配分法も活用可）'
+  ]},
+  {label:'②比較考量', gl:'gl-2', items:[
+    '配分法に基づく比準価格',
+    '土地残余法による収益価格'
+  ]}
+]},
+
+{id:'L03', cat:'宅地（土地類型）', name:'借地権', sub:'成熟度が高い地域',
+ phrase:'借地権及び借地権を含む複合不動産の取引事例に基づく比準価格、土地残余法による収益価格、賃料差額還元価格及び借地権割合による価格を関連づけて決定する。（全て同等）',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '複合不動産の取引事例に基づく比準価格',
+    '土地残余法による収益価格',
+    '賃料差額のうち取引対象部分を還元して得た価格',
+    '借地権割合により求めた価格（慣行成熟の場合）'
+  ]}
+]},
+
+{id:'L04', cat:'宅地（土地類型）', name:'借地権', sub:'成熟度が低い地域',
+ phrase:'土地残余法による収益価格、賃料差額還元価格及び更地・建付地から底地価格を控除して得た価格を関連づけて決定する。（全て同等）',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '土地残余法による収益価格',
+    '賃料差額のうち取引対象部分を還元して得た価格',
+    '更地又は建付地としての価格から底地価格を控除して得た価格'
+  ]}
+]},
+
+{id:'L05', cat:'宅地（土地類型）', name:'底地', sub:null,
+ phrase:'実際支払賃料に基づく純収益等の現在価値の総和を求めることにより得た収益価格及び比準価格を関連づけて決定する。（全て同等）',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '実際支払賃料に基づく純収益等の現在価値の総和による収益価格',
+    '比準価格'
+  ]}
+]},
+
+{id:'L06', cat:'宅地（土地類型）', name:'区分地上権', sub:null,
+ phrase:'設定事例等に基づく比準価格、土地残余法に準じた収益価格及び立体利用率による価格を関連づけた価格を標準とする。',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '設定事例等に基づく比準価格',
+    '土地残余法に準じた収益価格',
+    '立体利用率による価格'
+  ]}
+]},
+
+// ---- 農地・林地・宅地見込地 ----
+{id:'M01', cat:'農地・林地・宅地見込地', name:'農地・林地', sub:null,
+ phrase:'比準価格を標準とし、収益価格を参考として決定する。再調達原価が把握できる場合には、積算価格をも関連づけて決定すべきである。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:['比準価格']},
+  {label:'②参考', gl:'gl-2', items:['収益価格']},
+  {label:'③関連づけ（把握できる場合）', gl:'gl-3', items:['積算価格（再調達原価が把握できる場合）']}
+]},
+
+{id:'M02', cat:'農地・林地・宅地見込地', name:'宅地見込地', sub:'熟成度が高い（標準）',
+ phrase:'比準価格及び転換後・造成後の更地を想定しその価格から通常の造成費等を控除し熟成度に応じて修正した価格を関連づけて決定する。',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '比準価格',
+    '転換後・造成後の更地を想定→造成費等控除→熟成度に応じて修正した価格'
+  ]}
+]},
+
+{id:'M03', cat:'農地・林地・宅地見込地', name:'宅地見込地', sub:'熟成度が低い',
+ phrase:'比準価格を標準とし、転換前の土地の種別に基づく価格に宅地となる期待性を加味して得た価格を比較考量して決定する。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:['比準価格']},
+  {label:'②比較考量', gl:'gl-2', items:['転換前の土地の種別に基づく価格に宅地の期待性を加味した価格']}
+]},
+
+{id:'M04', cat:'農地・林地・宅地見込地', name:'宅地見込地（移行地）', sub:'移行地',
+ phrase:'移行地については、その転換・移行の程度に応じて上記のいずれかに準じて評価する。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:['比準価格']},
+  {label:'②比較考量', gl:'gl-2', items:['転換前・移行前の種別の手法による価格（移行程度低い場合）', '転換後・移行後の種別の手法による価格（移行程度高い場合）']}
+]},
+
+// ---- 建物及びその敷地 ----
+{id:'B01', cat:'建物及びその敷地', name:'自用の建物及びその敷地', sub:null,
+ phrase:'積算価格、比準価格及び収益価格を関連づけて決定するものとする。（全て同等）',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '積算価格',
+    '比準価格',
+    '収益価格'
+  ]}
+]},
+
+{id:'B02', cat:'建物及びその敷地', name:'貸家及びその敷地', sub:null,
+ phrase:'実際実質賃料に基づく純収益等の現在価値の総和を求めることにより得た収益価格を標準とし、積算価格及び比準価格を比較考量して決定するものとする。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:[
+    '実際実質賃料に基づく純収益等の現在価値の総和による収益価格'
+  ]},
+  {label:'②比較考量', gl:'gl-2', items:[
+    '積算価格',
+    '比準価格'
+  ]}
+]},
+
+{id:'B03', cat:'建物及びその敷地', name:'借地権付建物・区分所有建物及びその敷地', sub:'建物が自用の場合',
+ phrase:'積算価格、比準価格及び収益価格を関連づけて決定するものとする。（全て同等）',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '積算価格',
+    '比準価格',
+    '収益価格'
+  ]}
+]},
+
+{id:'B04', cat:'建物及びその敷地', name:'借地権付建物・区分所有建物及びその敷地', sub:'建物が賃貸されている場合',
+ phrase:'実際実質賃料に基づく純収益等の現在価値の総和を求めることにより得た収益価格を標準とし、積算価格及び比準価格を比較考量して決定するものとする。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:[
+    '実際実質賃料に基づく純収益等の現在価値の総和による収益価格'
+  ]},
+  {label:'②比較考量', gl:'gl-2', items:[
+    '積算価格',
+    '比準価格'
+  ]}
+]},
+
+{id:'B05', cat:'建物及びその敷地', name:'建物（市場性を有する場合の部分鑑定評価）', sub:null,
+ phrase:'積算価格を標準とし、配分法に基づく比準価格及び建物残余法による収益価格を比較考量して決定する。複合不動産価格をもとに建物に帰属する額を配分して求めた価格を標準とすることもできる。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:[
+    '積算価格',
+    '複合不動産価格をもとに建物に帰属する額を配分して求めた価格（代替標準）'
+  ]},
+  {label:'②比較考量', gl:'gl-2', items:[
+    '配分法に基づく比準価格',
+    '建物残余法による収益価格'
+  ]}
+]},
+
+{id:'B06', cat:'建物及びその敷地', name:'建物（市場性を有しない場合・特殊価格）', sub:null,
+ phrase:'積算価格を標準として決定するものとする。（文化財建造物・宗教建築物等の特殊価格）',
+ groups:[
+  {label:'①標準のみ', gl:'gl-1', items:[
+    '積算価格（標準として決定）'
+  ]}
+]},
+
+// ---- 借家権 ----
+{id:'K01', cat:'建物・借家権', name:'借家権', sub:'取引慣行がある場合',
+ phrase:'当事者間の個別的事情を考慮して求めた比準価格を標準とし、自用の建物及びその敷地の価格から貸家及びその敷地の価格を控除し調整した価格を比較考量。借家権割合が求められる場合はさらに比較考量する。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:[
+    '当事者間の個別的事情を考慮して求めた比準価格'
+  ]},
+  {label:'②比較考量', gl:'gl-2', items:[
+    '自用の建物及びその敷地の価格から貸家及びその敷地の価格を控除し調整した価格',
+    '借地権割合により求めた価格（割合が求められる場合）'
+  ]}
+]},
+
+{id:'K02', cat:'建物・借家権', name:'借家権', sub:'不随意の立退きに伴う場合（立退料込み）',
+ phrase:'新旧実際支払賃料の差額の一定期間相当額に賃料前払的一時金等を加えた額及び自用の建物及びその敷地の価格から貸家及びその敷地の価格を控除し調整した価格を関連づけて決定する。',
+ groups:[
+  {label:'①関連づけ（同等）', gl:'gl-1', items:[
+    '新規実際支払賃料と現行実際支払賃料の差額×一定期間＋賃料前払的一時金等',
+    '自用の建物及びその敷地の価格から貸家及びその敷地の価格を控除し調整した価格'
+  ]}
+]},
+
+// ---- 特定価格 ----
+{id:'T01', cat:'特定価格', name:'特定価格（証券化・資産流動化法等）', sub:'投資家に示す投資採算価値',
+ phrase:'基本的にDCF法により求めた試算価格を標準とし、直接還元法による検証を行って求めた収益価格に基づき、比準価格及び積算価格による検証を行い決定する。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:[
+    'DCF法による試算価格（直接還元法で検証）'
+  ]},
+  {label:'②検証', gl:'gl-2', items:[
+    '比準価格による検証',
+    '積算価格による検証'
+  ]}
+]},
+
+{id:'T02', cat:'特定価格', name:'特定価格（民事再生法）', sub:'早期売却を前提とした価格',
+ phrase:'原則として比準価格と収益価格を関連づけ、積算価格による検証を行って決定する。比較可能な事例が少ない場合は、通常の方法で正常価格を求めた上で早期売却に伴う減価を行うこともできる。',
+ groups:[
+  {label:'①標準（関連づけ）', gl:'gl-1', items:[
+    '比準価格',
+    '収益価格'
+  ]},
+  {label:'②検証', gl:'gl-2', items:[
+    '積算価格による検証'
+  ]}
+]},
+
+{id:'T03', cat:'特定価格', name:'特定価格（会社更生法・民事再生法）', sub:'事業継続を前提とした価格',
+ phrase:'原則として事業経営に基づく純収益のうち不動産に帰属する純収益に基づく収益価格を標準とし、比準価格を比較考量の上、積算価格による検証を行って決定する。',
+ groups:[
+  {label:'①標準', gl:'gl-1', items:[
+    '事業経営に基づく純収益のうち不動産に帰属する純収益による収益価格'
+  ]},
+  {label:'②比較考量', gl:'gl-2', items:[
+    '比準価格'
+  ]},
+  {label:'③検証', gl:'gl-3', items:[
+    '積算価格による検証'
+  ]}
+]},
+
+// ---- 賃料 ----
+{id:'R01', cat:'賃料（各論第2章）', name:'宅地の新規賃料（正常賃料）', sub:null,
+ phrase:'積算賃料、比準賃料及び配分法に準ずる方法に基づく比準賃料を関連づけて決定する。純収益を適切に求めることができるときは収益賃料を比較考量。さらに賃貸事業分析法も比較考量できる。',
+ groups:[
+  {label:'①標準（関連づけ）', gl:'gl-1', items:[
+    '積算賃料',
+    '比準賃料（賃貸事例）',
+    '配分法に準ずる方法に基づく比準賃料'
+  ]},
+  {label:'②比較考量', gl:'gl-2', items:[
+    '収益賃料（純収益を適切に求めることができる場合）',
+    '賃貸事業分析法による試算賃料'
+  ]}
+]},
+
+{id:'R02', cat:'賃料（各論第2章）', name:'宅地の限定賃料', sub:null,
+ phrase:'限定価格を基礎価格として求めた積算賃料及び限定使用を前提とする賃貸借等の事例に基づく比準賃料を関連づけて決定する。（全て同等）',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '限定価格を基礎価格として求めた積算賃料',
+    '隣接宅地の併合使用等を前提とする事例に基づく比準賃料'
+  ]}
+]},
+
+{id:'R03', cat:'賃料（各論第2章）', name:'宅地の継続賃料', sub:null,
+ phrase:'差額配分法による賃料、利回り法による賃料、スライド法による賃料及び比準賃料を関連づけて決定するものとする。（全て同等）',
+ groups:[
+  {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
+    '差額配分法による賃料',
+    '利回り法による賃料',
+    'スライド法による賃料',
+    '賃貸事例比較法による比準賃料'
+  ]}
+]},
+
+{id:'R04', cat:'賃料（各論第2章）', name:'建物及びその敷地の正常賃料', sub:null,
+ phrase:'積算賃料及び比準賃料を関連づけて決定する。純収益を適切に求めることができるときは収益賃料を比較考量して決定する。',
+ groups:[
+  {label:'①標準（関連づけ）', gl:'gl-1', items:[
+    '積算賃料',
+    '比準賃料'
+  ]},
+  {label:'②比較考量', gl:'gl-2', items:[
+    '収益賃料（純収益を適切に求めることができる場合）'
+  ]}
+]}
+
+];
+
+// ============================================================
+// CATEGORY MAP
+// ============================================================
+const CAT = {
+  land:      ['L01','L02','L03','L04','L05','L06'],
+  other_land:['M01','M02','M03','M04'],
+  bldg:      ['B01','B02','B03','B04','B05','B06'],
+  bldg_only: ['K01','K02','B05','B06'],
+  tokutei:   ['T01','T02','T03'],
+  rent:      ['R01','R02','R03','R04'],
+  all:       null // all
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let qs=[], idx=0, sc=0, wl=[], tapOrder=[], answered=false, retry=false;
+
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+
+function start(cat){
+  retry=false;
+  if(cat==='all'){
+    qs=[...ALL];
+  } else {
+    const ids=CAT[cat];
+    qs=ALL.filter(q=>ids.includes(q.id));
+  }
+  shuffle(qs);
+  idx=0;sc=0;wl=[];
+  showQuizView();
+}
+
+function retryWrong(){
+  if(!wl.length){backToMenu();return;}
+  retry=true;
+  qs=[...wl];
+  shuffle(qs);
+  idx=0;sc=0;wl=[];
+  showQuizView();
+}
+
+function showQuizView(){
+  document.getElementById('menuView').classList.add('hidden');
+  document.getElementById('resultView').classList.add('hidden');
+  document.getElementById('quizView').classList.remove('hidden');
+  document.getElementById('pb').style.display='block';
+  renderQ();
+}
+
+function renderQ(){
+  const q=qs[idx];
+  answered=false;
+  tapOrder=[];
+
+  document.getElementById('qMeta').textContent=q.cat;
+  document.getElementById('qNum').textContent=`問 ${idx+1} / ${qs.length}`;
+  document.getElementById('hSub').textContent=retry?'復習モード':`問 ${idx+1}/${qs.length}`;
+  document.getElementById('qName').textContent=q.name;
+  const subEl=document.getElementById('qSub');
+  if(q.sub){subEl.textContent=q.sub;subEl.style.display='block';}
+  else{subEl.style.display='none';}
+  document.getElementById('pbf').style.width=(idx/qs.length*100)+'%';
+
+  // Build items (flatten all groups, shuffle)
+  const allItems=[];
+  q.groups.forEach((g,gi)=>{
+    g.items.forEach((txt,ii)=>{
+      allItems.push({text:txt, group:gi, origIdx:gi*100+ii});
+    });
+  });
+  shuffle(allItems);
+
+  const grid=document.getElementById('itemsGrid');
+  grid.innerHTML='';
+  allItems.forEach((item,i)=>{
+    const card=document.createElement('div');
+    card.className='item-card';
+    card.dataset.group=item.group;
+    card.dataset.idx=i;
+    card.innerHTML=`<div class="item-num" id="num_${i}"></div><div class="item-text">${item.text}</div>`;
+    card.onclick=()=>tapItem(i,card);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('btnCheck').disabled=true;
+  document.getElementById('resultBox').style.display='none';
+  document.getElementById('btnNext').style.display='none';
+  window.scrollTo(0,0);
+}
+
+function tapItem(idx_card, card){
+  if(answered)return;
+  const numEl=document.getElementById('num_'+idx_card);
+  if(card.classList.contains('selected')){
+    // deselect
+    const tapIdx=tapOrder.indexOf(idx_card);
+    tapOrder.splice(tapIdx,1);
+    card.classList.remove('selected');
+    numEl.textContent='';
+    numEl.classList.remove('visible');
+    // renumber
+    tapOrder.forEach((ti,i)=>{
+      document.getElementById('num_'+ti).textContent=i+1;
+    });
+  } else {
+    // select
+    tapOrder.push(idx_card);
+    card.classList.add('selected');
+    numEl.textContent=tapOrder.length;
+    numEl.classList.add('visible');
+  }
+
+  // Enable check when all items tapped
+  const totalItems=document.querySelectorAll('.item-card').length;
+  document.getElementById('btnCheck').disabled=(tapOrder.length<totalItems);
+}
+
+function resetSel(){
+  if(answered)return;
+  tapOrder=[];
+  document.querySelectorAll('.item-card').forEach(c=>{
+    c.classList.remove('selected');
+    const n=c.querySelector('.item-num');
+    n.textContent='';
+    n.classList.remove('visible');
+  });
+  document.getElementById('btnCheck').disabled=true;
+}
+
+function checkAnswer(){
+  if(answered)return;
+  answered=true;
+  const q=qs[idx];
+  const cards=Array.from(document.querySelectorAll('.item-card'));
+
+  // Build user's group assignment based on tap order
+  // tapOrder[i] = card index, position i+1 in tap sequence
+  // We need: for each group pair (g, g+1): all g items tapped before all g+1 items
+  // i.e., max tapSeq(group g) < min tapSeq(group g+1)
+
+  // Get tap sequence for each card
+  const tapSeq={};
+  tapOrder.forEach((cardIdx,pos)=>{tapSeq[cardIdx]=pos+1;});
+
+  // Group tap sequences by group index
+  const groupSeqs={};
+  cards.forEach((card,ci)=>{
+    const g=parseInt(card.dataset.group);
+    if(!groupSeqs[g])groupSeqs[g]=[];
+    groupSeqs[g].push(tapSeq[ci]);
+  });
+
+  // Check ordering: for each consecutive group pair
+  let correct=true;
+  const maxGroups=q.groups.length;
+  for(let g=0;g<maxGroups-1;g++){
+    const maxG=Math.max(...(groupSeqs[g]||[]));
+    const minG1=Math.min(...(groupSeqs[g+1]||[]));
+    if(maxG>=minG1){correct=false;break;}
+  }
+
+  if(correct)sc++;
+  else wl.push(q);
+
+  // Show visual result on cards
+  cards.forEach((card,ci)=>{
+    const g=parseInt(card.dataset.group);
+    const userTap=tapSeq[ci];
+
+    // Check if this card's position is correct relative to its group
+    let cardOk=true;
+    if(maxGroups>1){
+      for(let g2=0;g2<maxGroups;g2++){
+        if(g2===g)continue;
+        if(g2<g){
+          // g2 items should all be tapped before this
+          if(Math.max(...(groupSeqs[g2]||[]))>userTap){cardOk=false;break;}
+        } else {
+          // g2 items should all be tapped after this
+          if(Math.min(...(groupSeqs[g2]||[]))<userTap){cardOk=false;break;}
+        }
+      }
+    }
+    card.classList.remove('selected');
+    if(cardOk){
+      card.classList.add('correct');
+    } else {
+      card.classList.add('wrong-early');
+    }
+  });
+
+  // Show answer box
+  const box=document.getElementById('resultBox');
+  box.style.display='block';
+  let html=`<div class="result-title ${correct?'ok':'ng'}">${correct?'✓ 正解！':'✗ 不正解'}</div>`;
+
+  // Correct answer display
+  html+=`<div class="group-block">`;
+  q.groups.forEach((g,gi)=>{
+    const colors=['#1565c0','#6a1b9a','#e65100'];
+    const bgColors=['#e3f2fd','#f3e5f5','#fff3e0'];
+    html+=`<div style="margin-top:10px">`;
+    html+=`<span class="group-block .glabel" style="background:${bgColors[gi]};color:${colors[gi]};font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px;display:inline-block;margin-bottom:5px">${g.label}</span>`;
+    html+=`<ul class="group-items">`;
+    g.items.forEach(item=>{
+      html+=`<li style="border-left-color:${colors[gi]}">${item}</li>`;
+    });
+    html+=`</ul></div>`;
+  });
+  html+=`</div>`;
+  html+=`<div class="result-phrase">${q.phrase}</div>`;
+
+  box.innerHTML=html;
+  const btnNext=document.getElementById('btnNext');
+  btnNext.style.display='block';
+  btnNext.textContent=idx<qs.length-1?'次の問題へ':'結果を見る';
+
+  // disable check
+  document.getElementById('btnCheck').disabled=true;
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function nextQ(){
+  idx++;
+  if(idx>=qs.length){showResult();}
+  else{renderQ();}
+}
+
+function showResult(){
+  document.getElementById('quizView').classList.add('hidden');
+  document.getElementById('resultView').classList.remove('hidden');
+  document.getElementById('pb').style.display='none';
+  document.getElementById('resScore').textContent=sc+' / '+qs.length;
+  const p=Math.round(sc/qs.length*100);
+  document.getElementById('resText').textContent=
+    `正答率 ${p}%　${p===100?'完璧です！':p>=80?'よく覚えています！':p>=60?'もう少し！':'繰り返し復習しましょう！'}`;
+  document.getElementById('hSub').textContent='結果';
+}
+
+function backToMenu(){
+  document.getElementById('quizView').classList.add('hidden');
+  document.getElementById('resultView').classList.add('hidden');
+  document.getElementById('menuView').classList.remove('hidden');
+  document.getElementById('pb').style.display='none';
+  document.getElementById('hSub').textContent='各論1・2章 評価手法の優先順位';
+}
+</script>
+</body>
+</html>
