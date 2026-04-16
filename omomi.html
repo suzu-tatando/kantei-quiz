@@ -40,6 +40,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
 .item-card.correct{border-color:#2e7d32;background:#e8f5e9}
 .item-card.wrong-early{border-color:#c62828;background:#fce4ec}
 .item-card.missed{border-color:#f57c00;background:#fff3e0}
+.item-card.distractor-ok{background:#f5f5f5;border-color:#bdbdbd;color:#9e9e9e}
+.item-card.distractor-ok .item-text{text-decoration:line-through;color:#bdbdbd}
 .item-num{width:28px;height:28px;border-radius:50%;background:#1565c0;color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;opacity:0;transition:opacity .15s}
 .item-num.visible{opacity:1}
 .item-text{font-size:13px;line-height:1.55;flex:1;color:#333}
@@ -70,6 +72,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
 .res-retry{display:inline-block;padding:12px 28px;background:#fff;color:#1565c0;font-size:14px;font-weight:600;border:2px solid #1565c0;border-radius:12px;cursor:pointer;margin:6px}
 .res-back{display:inline-block;padding:12px 28px;background:#1565c0;color:#fff;font-size:14px;font-weight:600;border:none;border-radius:12px;cursor:pointer;margin:6px}
 .hidden{display:none!important}
+.distractor-badge{font-size:10px;color:#9e9e9e;background:#eeeeee;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -95,7 +98,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
     <span style="color:#1565c0">全問まとめて挑戦<span class="badge">27問</span></span>
     <span class="arr" style="color:#1565c0">›</span>
   </button>
-  <div class="snote">優先度の高い順にタップ→答え合わせ</div>
+  <div class="snote">正しい手法のみを優先度の高い順にタップ→答え合わせ</div>
   <div class="link-row">
     <a href="index.html">一問一答へ</a>
     <a href="anki.html">穴埋め暗記へ</a>
@@ -110,11 +113,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
     <div class="qname" id="qName"></div>
     <div class="qsub" id="qSub" style="display:none"></div>
   </div>
-  <div class="instruction">優先度の高い順にタップしてください<br>同じ優先度の手法は順番不問です</div>
+  <div class="instruction">正しい手法のみを優先度の高い順にタップしてください<br>（ダミーの選択肢も含まれています・同じ優先度は順番不問）</div>
   <div class="items-grid" id="itemsGrid"></div>
   <div class="btn-row">
     <button class="btn-reset" onclick="resetSel()">リセット</button>
-    <button class="btn-check" id="btnCheck" onclick="checkAnswer()" disabled>答え合わせ</button>
+    <button class="btn-check" id="btnCheck" onclick="checkAnswer()">答え合わせ</button>
   </div>
   <div class="result-box" id="resultBox"></div>
   <button class="btn-next" id="btnNext" onclick="nextQ()">次の問題へ</button>
@@ -137,12 +140,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Hiragino Kaku
 // DATA: groups[i] = {label, glClass, items[]}
 // group 1 = 標準, group 2 = 比較考量, group 3 = 積算(参考)
 // Within a group, any tap order is correct
+// distractors: dummy choices that should NOT be selected
 // ============================================================
 const ALL = [
 
 // ---- 宅地（土地類型）----
 {id:'L01', cat:'宅地（土地類型）', name:'更地', sub:null,
  phrase:'更地並びに配分法が適用できる場合における建物及びその敷地の取引事例に基づく比準価格並びに土地残余法による収益価格を関連づけて決定するものとする。再調達原価が把握できる場合には積算価格をも関連づけ、面積が大きい場合はさらに開発法を比較考量する。',
+ distractors:['借地権割合による価格', '差額配分法による賃料'],
  groups:[
   {label:'①標準（関連づけ）', gl:'gl-1', items:[
     '比準価格（更地取引事例及び配分法適用の建物・敷地の取引事例に基づく）',
@@ -156,6 +161,7 @@ const ALL = [
 
 {id:'L02', cat:'宅地（土地類型）', name:'建付地', sub:null,
  phrase:'更地の価格をもとに最有効使用との格差・更地化の難易・敷地と建物等の関連性を考慮して求めた価格を標準とし、配分法に基づく比準価格及び土地残余法による収益価格を比較考量して決定する。なお、複合不動産価格をもとに敷地に帰属する額を配分して求めた価格を標準とすることもできる。',
+ distractors:['DCF法による収益価格', '借地権及び複合不動産の取引事例に基づく比準価格'],
  groups:[
   {label:'①標準', gl:'gl-1', items:[
     '更地の価格基礎に最有効使用との格差・更地化難易度・敷地と建物等の関連性を考慮した価格（配分法も活用可）'
@@ -168,6 +174,7 @@ const ALL = [
 
 {id:'L03', cat:'宅地（土地類型）', name:'借地権', sub:'成熟度が高い地域',
  phrase:'借地権及び借地権を含む複合不動産の取引事例に基づく比準価格、土地残余法による収益価格、賃料差額還元価格及び借地権割合による価格を関連づけて決定する。（全て同等）',
+ distractors:['実際支払賃料に基づく収益価格（底地の手法）', '開発法'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '複合不動産の取引事例に基づく比準価格',
@@ -179,6 +186,7 @@ const ALL = [
 
 {id:'L04', cat:'宅地（土地類型）', name:'借地権', sub:'成熟度が低い地域',
  phrase:'土地残余法による収益価格、賃料差額還元価格及び更地・建付地から底地価格を控除して得た価格を関連づけて決定する。（全て同等）',
+ distractors:['借地権割合による価格（成熟地域の手法）', '取引事例比較法による比準価格（慣行なし）'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '土地残余法による収益価格',
@@ -189,6 +197,7 @@ const ALL = [
 
 {id:'L05', cat:'宅地（土地類型）', name:'底地', sub:null,
  phrase:'実際支払賃料に基づく純収益等の現在価値の総和を求めることにより得た収益価格及び比準価格を関連づけて決定する。（全て同等）',
+ distractors:['土地残余法による収益価格', '借地権割合による価格'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '実際支払賃料に基づく純収益等の現在価値の総和による収益価格',
@@ -198,6 +207,7 @@ const ALL = [
 
 {id:'L06', cat:'宅地（土地類型）', name:'区分地上権', sub:null,
  phrase:'設定事例等に基づく比準価格、土地残余法に準じた収益価格及び立体利用率による価格を関連づけた価格を標準とする。',
+ distractors:['借家権を控除した価格', '開発法'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '設定事例等に基づく比準価格',
@@ -209,6 +219,7 @@ const ALL = [
 // ---- 農地・林地・宅地見込地 ----
 {id:'M01', cat:'農地・林地・宅地見込地', name:'農地・林地', sub:null,
  phrase:'比準価格を標準とし、収益価格を参考として決定する。再調達原価が把握できる場合には、積算価格をも関連づけて決定すべきである。',
+ distractors:['差額配分法による価格', '借地権割合による価格'],
  groups:[
   {label:'①標準', gl:'gl-1', items:['比準価格']},
   {label:'②参考', gl:'gl-2', items:['収益価格']},
@@ -217,6 +228,7 @@ const ALL = [
 
 {id:'M02', cat:'農地・林地・宅地見込地', name:'宅地見込地', sub:'熟成度が高い（標準）',
  phrase:'比準価格及び転換後・造成後の更地を想定しその価格から通常の造成費等を控除し熟成度に応じて修正した価格を関連づけて決定する。',
+ distractors:['土地残余法による収益価格', '積算価格（単独）'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '比準価格',
@@ -226,6 +238,7 @@ const ALL = [
 
 {id:'M03', cat:'農地・林地・宅地見込地', name:'宅地見込地', sub:'熟成度が低い',
  phrase:'比準価格を標準とし、転換前の土地の種別に基づく価格に宅地となる期待性を加味して得た価格を比較考量して決定する。',
+ distractors:['転換後・造成後の更地を想定した価格（熟成度高の手法）', '土地残余法による収益価格'],
  groups:[
   {label:'①標準', gl:'gl-1', items:['比準価格']},
   {label:'②比較考量', gl:'gl-2', items:['転換前の土地の種別に基づく価格に宅地の期待性を加味した価格']}
@@ -233,6 +246,7 @@ const ALL = [
 
 {id:'M04', cat:'農地・林地・宅地見込地', name:'宅地見込地（移行地）', sub:'移行地',
  phrase:'移行地については、その転換・移行の程度に応じて上記のいずれかに準じて評価する。',
+ distractors:['DCF法による収益価格', '特殊価格'],
  groups:[
   {label:'①標準', gl:'gl-1', items:['比準価格']},
   {label:'②比較考量', gl:'gl-2', items:['転換前・移行前の種別の手法による価格（移行程度低い場合）', '転換後・移行後の種別の手法による価格（移行程度高い場合）']}
@@ -241,6 +255,7 @@ const ALL = [
 // ---- 建物及びその敷地 ----
 {id:'B01', cat:'建物及びその敷地', name:'自用の建物及びその敷地', sub:null,
  phrase:'積算価格、比準価格及び収益価格を関連づけて決定するものとする。（全て同等）',
+ distractors:['実際実質賃料に基づく現在価値の総和による収益価格（貸家の手法）', '開発法'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '積算価格',
@@ -251,6 +266,7 @@ const ALL = [
 
 {id:'B02', cat:'建物及びその敷地', name:'貸家及びその敷地', sub:null,
  phrase:'実際実質賃料に基づく純収益等の現在価値の総和を求めることにより得た収益価格を標準とし、積算価格及び比準価格を比較考量して決定するものとする。',
+ distractors:['更地の価格をもとに格差等を考慮した価格（建付地の手法）', '借地権割合による価格'],
  groups:[
   {label:'①標準', gl:'gl-1', items:[
     '実際実質賃料に基づく純収益等の現在価値の総和による収益価格'
@@ -263,6 +279,7 @@ const ALL = [
 
 {id:'B03', cat:'建物及びその敷地', name:'借地権付建物・区分所有建物及びその敷地', sub:'建物が自用の場合',
  phrase:'積算価格、比準価格及び収益価格を関連づけて決定するものとする。（全て同等）',
+ distractors:['実際実質賃料に基づく現在価値の総和による収益価格（賃貸時の手法）', '底地価格を控除した価格'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '積算価格',
@@ -273,6 +290,7 @@ const ALL = [
 
 {id:'B04', cat:'建物及びその敷地', name:'借地権付建物・区分所有建物及びその敷地', sub:'建物が賃貸されている場合',
  phrase:'実際実質賃料に基づく純収益等の現在価値の総和を求めることにより得た収益価格を標準とし、積算価格及び比準価格を比較考量して決定するものとする。',
+ distractors:['更地の価格をもとに格差等を考慮した価格（建付地の手法）', '積算価格・比準価格・収益価格を関連づけ（自用時の手法）'],
  groups:[
   {label:'①標準', gl:'gl-1', items:[
     '実際実質賃料に基づく純収益等の現在価値の総和による収益価格'
@@ -285,6 +303,7 @@ const ALL = [
 
 {id:'B05', cat:'建物及びその敷地', name:'建物（市場性を有する場合の部分鑑定評価）', sub:null,
  phrase:'積算価格を標準とし、配分法に基づく比準価格及び建物残余法による収益価格を比較考量して決定する。複合不動産価格をもとに建物に帰属する額を配分して求めた価格を標準とすることもできる。',
+ distractors:['開発法', '積算賃料'],
  groups:[
   {label:'①標準', gl:'gl-1', items:[
     '積算価格',
@@ -298,6 +317,7 @@ const ALL = [
 
 {id:'B06', cat:'建物及びその敷地', name:'建物（市場性を有しない場合・特殊価格）', sub:null,
  phrase:'積算価格を標準として決定するものとする。（文化財建造物・宗教建築物等の特殊価格）',
+ distractors:['配分法に基づく比準価格', '建物残余法による収益価格'],
  groups:[
   {label:'①標準のみ', gl:'gl-1', items:[
     '積算価格（標準として決定）'
@@ -307,6 +327,7 @@ const ALL = [
 // ---- 借家権 ----
 {id:'K01', cat:'建物・借家権', name:'借家権', sub:'取引慣行がある場合',
  phrase:'当事者間の個別的事情を考慮して求めた比準価格を標準とし、自用の建物及びその敷地の価格から貸家及びその敷地の価格を控除し調整した価格を比較考量。借家権割合が求められる場合はさらに比較考量する。',
+ distractors:['積算価格', '差額配分法による賃料'],
  groups:[
   {label:'①標準', gl:'gl-1', items:[
     '当事者間の個別的事情を考慮して求めた比準価格'
@@ -319,6 +340,7 @@ const ALL = [
 
 {id:'K02', cat:'建物・借家権', name:'借家権', sub:'不随意の立退きに伴う場合（立退料込み）',
  phrase:'新旧実際支払賃料の差額の一定期間相当額に賃料前払的一時金等を加えた額及び自用の建物及びその敷地の価格から貸家及びその敷地の価格を控除し調整した価格を関連づけて決定する。',
+ distractors:['借地権割合による価格', '土地残余法による収益価格'],
  groups:[
   {label:'①関連づけ（同等）', gl:'gl-1', items:[
     '新規実際支払賃料と現行実際支払賃料の差額×一定期間＋賃料前払的一時金等',
@@ -329,6 +351,7 @@ const ALL = [
 // ---- 特定価格 ----
 {id:'T01', cat:'特定価格', name:'特定価格（証券化・資産流動化法等）', sub:'投資家に示す投資採算価値',
  phrase:'基本的にDCF法により求めた試算価格を標準とし、直接還元法による検証を行って求めた収益価格に基づき、比準価格及び積算価格による検証を行い決定する。',
+ distractors:['比準価格（標準として）', 'スライド法'],
  groups:[
   {label:'①標準', gl:'gl-1', items:[
     'DCF法による試算価格（直接還元法で検証）'
@@ -341,6 +364,7 @@ const ALL = [
 
 {id:'T02', cat:'特定価格', name:'特定価格（民事再生法）', sub:'早期売却を前提とした価格',
  phrase:'原則として比準価格と収益価格を関連づけ、積算価格による検証を行って決定する。比較可能な事例が少ない場合は、通常の方法で正常価格を求めた上で早期売却に伴う減価を行うこともできる。',
+ distractors:['DCF法を標準として', '差額配分法'],
  groups:[
   {label:'①標準（関連づけ）', gl:'gl-1', items:[
     '比準価格',
@@ -353,6 +377,7 @@ const ALL = [
 
 {id:'T03', cat:'特定価格', name:'特定価格（会社更生法・民事再生法）', sub:'事業継続を前提とした価格',
  phrase:'原則として事業経営に基づく純収益のうち不動産に帰属する純収益に基づく収益価格を標準とし、比準価格を比較考量の上、積算価格による検証を行って決定する。',
+ distractors:['比準価格を標準として', '差額配分法'],
  groups:[
   {label:'①標準', gl:'gl-1', items:[
     '事業経営に基づく純収益のうち不動産に帰属する純収益による収益価格'
@@ -368,6 +393,7 @@ const ALL = [
 // ---- 賃料 ----
 {id:'R01', cat:'賃料（各論第2章）', name:'宅地の新規賃料（正常賃料）', sub:null,
  phrase:'積算賃料、比準賃料及び配分法に準ずる方法に基づく比準賃料を関連づけて決定する。純収益を適切に求めることができるときは収益賃料を比較考量。さらに賃貸事業分析法も比較考量できる。',
+ distractors:['スライド法', '差額配分法'],
  groups:[
   {label:'①標準（関連づけ）', gl:'gl-1', items:[
     '積算賃料',
@@ -382,6 +408,7 @@ const ALL = [
 
 {id:'R02', cat:'賃料（各論第2章）', name:'宅地の限定賃料', sub:null,
  phrase:'限定価格を基礎価格として求めた積算賃料及び限定使用を前提とする賃貸借等の事例に基づく比準賃料を関連づけて決定する。（全て同等）',
+ distractors:['収益賃料（標準として）', '差額配分法'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '限定価格を基礎価格として求めた積算賃料',
@@ -391,6 +418,7 @@ const ALL = [
 
 {id:'R03', cat:'賃料（各論第2章）', name:'宅地の継続賃料', sub:null,
  phrase:'差額配分法による賃料、利回り法による賃料、スライド法による賃料及び比準賃料を関連づけて決定するものとする。（全て同等）',
+ distractors:['積算賃料', '賃貸事業分析法による試算賃料'],
  groups:[
   {label:'①標準（関連づけ・同等）', gl:'gl-1', items:[
     '差額配分法による賃料',
@@ -402,6 +430,7 @@ const ALL = [
 
 {id:'R04', cat:'賃料（各論第2章）', name:'建物及びその敷地の正常賃料', sub:null,
  phrase:'積算賃料及び比準賃料を関連づけて決定する。純収益を適切に求めることができるときは収益賃料を比較考量して決定する。',
+ distractors:['差額配分法', '利回り法'],
  groups:[
   {label:'①標準（関連づけ）', gl:'gl-1', items:[
     '積算賃料',
@@ -478,12 +507,15 @@ function renderQ(){
   else{subEl.style.display='none';}
   document.getElementById('pbf').style.width=(idx/qs.length*100)+'%';
 
-  // Build items (flatten all groups, shuffle)
+  // Build items: correct items from groups + distractors, then shuffle
   const allItems=[];
   q.groups.forEach((g,gi)=>{
     g.items.forEach((txt,ii)=>{
-      allItems.push({text:txt, group:gi, origIdx:gi*100+ii});
+      allItems.push({text:txt, group:gi, isDistractor:false});
     });
+  });
+  (q.distractors||[]).forEach(txt=>{
+    allItems.push({text:txt, group:-1, isDistractor:true});
   });
   shuffle(allItems);
 
@@ -494,12 +526,14 @@ function renderQ(){
     card.className='item-card';
     card.dataset.group=item.group;
     card.dataset.idx=i;
+    card.dataset.distractor=item.isDistractor?'true':'false';
     card.innerHTML=`<div class="item-num" id="num_${i}"></div><div class="item-text">${item.text}</div>`;
     card.onclick=()=>tapItem(i,card);
     grid.appendChild(card);
   });
 
-  document.getElementById('btnCheck').disabled=true;
+  // 答え合わせボタンは常時有効
+  document.getElementById('btnCheck').disabled=false;
   document.getElementById('resultBox').style.display='none';
   document.getElementById('btnNext').style.display='none';
   window.scrollTo(0,0);
@@ -526,10 +560,6 @@ function tapItem(idx_card, card){
     numEl.textContent=tapOrder.length;
     numEl.classList.add('visible');
   }
-
-  // Enable check when all items tapped
-  const totalItems=document.querySelectorAll('.item-card').length;
-  document.getElementById('btnCheck').disabled=(tapOrder.length<totalItems);
 }
 
 function resetSel(){
@@ -541,7 +571,6 @@ function resetSel(){
     n.textContent='';
     n.classList.remove('visible');
   });
-  document.getElementById('btnCheck').disabled=true;
 }
 
 function checkAnswer(){
@@ -550,55 +579,120 @@ function checkAnswer(){
   const q=qs[idx];
   const cards=Array.from(document.querySelectorAll('.item-card'));
 
-  // Build user's group assignment based on tap order
-  // tapOrder[i] = card index, position i+1 in tap sequence
-  // We need: for each group pair (g, g+1): all g items tapped before all g+1 items
-  // i.e., max tapSeq(group g) < min tapSeq(group g+1)
+  // 0個タップの場合は不正解
+  if(tapOrder.length===0){
+    // 全カードを missed or distractor-ok に
+    cards.forEach(card=>{
+      const isDistractor=(card.dataset.distractor==='true');
+      card.classList.remove('selected');
+      if(isDistractor){
+        card.classList.add('distractor-ok');
+        const txt=card.querySelector('.item-text');
+        if(!card.querySelector('.distractor-badge')){
+          const badge=document.createElement('span');
+          badge.className='distractor-badge';
+          badge.textContent='ダミー';
+          txt.appendChild(badge);
+        }
+      } else {
+        card.classList.add('missed');
+      }
+    });
+    wl.push(q);
+    showResultBox(false, q, cards);
+    return;
+  }
 
-  // Get tap sequence for each card
+  // Build tap sequence map: cardIdx -> position (1-based)
   const tapSeq={};
   tapOrder.forEach((cardIdx,pos)=>{tapSeq[cardIdx]=pos+1;});
 
-  // Group tap sequences by group index
+  // Separate correct cards and distractor cards
+  const correctCards=cards.filter(c=>c.dataset.distractor==='false');
+  const distractorCards=cards.filter(c=>c.dataset.distractor==='true');
+
+  // Check: no distractor tapped
+  const tappedDistractors=distractorCards.filter(c=>tapOrder.includes(parseInt(c.dataset.idx)));
+
+  // Check: all correct items tapped
+  const tappedCorrect=correctCards.filter(c=>tapOrder.includes(parseInt(c.dataset.idx)));
+  const allCorrectTapped=(tappedCorrect.length===correctCards.length);
+
+  // Check ordering among correct cards only
+  // Build groupSeqs from correct cards
   const groupSeqs={};
-  cards.forEach((card,ci)=>{
+  correctCards.forEach(card=>{
+    const ci=parseInt(card.dataset.idx);
     const g=parseInt(card.dataset.group);
     if(!groupSeqs[g])groupSeqs[g]=[];
-    groupSeqs[g].push(tapSeq[ci]);
+    groupSeqs[g].push(tapSeq[ci]||Infinity);
   });
 
-  // Check ordering: for each consecutive group pair
-  let correct=true;
+  let orderOk=true;
   const maxGroups=q.groups.length;
   for(let g=0;g<maxGroups-1;g++){
-    const maxG=Math.max(...(groupSeqs[g]||[]));
-    const minG1=Math.min(...(groupSeqs[g+1]||[]));
-    if(maxG>=minG1){correct=false;break;}
+    const maxG=Math.max(...(groupSeqs[g]||[Infinity]));
+    const minG1=Math.min(...(groupSeqs[g+1]||[Infinity]));
+    if(maxG>=minG1){orderOk=false;break;}
   }
 
+  const correct=(tappedDistractors.length===0 && allCorrectTapped && orderOk);
   if(correct)sc++;
   else wl.push(q);
 
-  // Show visual result on cards
-  cards.forEach((card,ci)=>{
+  // Visual feedback on cards
+  cards.forEach(card=>{
+    const ci=parseInt(card.dataset.idx);
+    const isDistractor=(card.dataset.distractor==='true');
+    const isTapped=tapOrder.includes(ci);
     const g=parseInt(card.dataset.group);
-    const userTap=tapSeq[ci];
 
-    // Check if this card's position is correct relative to its group
+    card.classList.remove('selected');
+
+    if(isDistractor){
+      if(isTapped){
+        // タップしてしまったダミー → 赤 + ✕
+        card.classList.add('wrong-early');
+        const numEl=document.getElementById('num_'+ci);
+        numEl.textContent='✕';
+        numEl.classList.add('visible');
+        numEl.style.background='#c62828';
+      } else {
+        // タップしなかったダミー → グレー + ダミーバッジ
+        card.classList.add('distractor-ok');
+        const txt=card.querySelector('.item-text');
+        if(!card.querySelector('.distractor-badge')){
+          const badge=document.createElement('span');
+          badge.className='distractor-badge';
+          badge.textContent='ダミー';
+          txt.appendChild(badge);
+        }
+      }
+      return;
+    }
+
+    // 正しい手法の場合
+    if(!isTapped){
+      // タップし忘れ → オレンジ
+      card.classList.add('missed');
+      return;
+    }
+
+    // タップした正しい手法: 順序チェック
+    const userTap=tapSeq[ci];
     let cardOk=true;
     if(maxGroups>1){
       for(let g2=0;g2<maxGroups;g2++){
         if(g2===g)continue;
         if(g2<g){
-          // g2 items should all be tapped before this
-          if(Math.max(...(groupSeqs[g2]||[]))>userTap){cardOk=false;break;}
+          const maxG2=Math.max(...(groupSeqs[g2]||[0]));
+          if(maxG2>userTap){cardOk=false;break;}
         } else {
-          // g2 items should all be tapped after this
-          if(Math.min(...(groupSeqs[g2]||[]))<userTap){cardOk=false;break;}
+          const minG2=Math.min(...(groupSeqs[g2]||[Infinity]));
+          if(minG2<userTap){cardOk=false;break;}
         }
       }
     }
-    card.classList.remove('selected');
     if(cardOk){
       card.classList.add('correct');
     } else {
@@ -606,7 +700,10 @@ function checkAnswer(){
     }
   });
 
-  // Show answer box
+  showResultBox(correct, q, cards);
+}
+
+function showResultBox(correct, q, cards){
   const box=document.getElementById('resultBox');
   box.style.display='block';
   let html=`<div class="result-title ${correct?'ok':'ng'}">${correct?'✓ 正解！':'✗ 不正解'}</div>`;
@@ -625,6 +722,18 @@ function checkAnswer(){
     html+=`</ul></div>`;
   });
   html+=`</div>`;
+
+  // ダミー一覧を表示
+  if(q.distractors&&q.distractors.length>0){
+    html+=`<div style="margin-top:10px;padding:8px 10px;background:#f5f5f5;border-radius:8px;">`;
+    html+=`<span style="font-size:11px;font-weight:700;color:#9e9e9e;">ダミー選択肢（選んではいけない）：</span>`;
+    html+=`<ul style="list-style:none;padding-left:4px;margin-top:4px;">`;
+    q.distractors.forEach(d=>{
+      html+=`<li style="font-size:12px;color:#bdbdbd;text-decoration:line-through;padding:2px 0 2px 10px;border-left:2px solid #e0e0e0;">${d}</li>`;
+    });
+    html+=`</ul></div>`;
+  }
+
   html+=`<div class="result-phrase">${q.phrase}</div>`;
 
   box.innerHTML=html;
@@ -632,7 +741,6 @@ function checkAnswer(){
   btnNext.style.display='block';
   btnNext.textContent=idx<qs.length-1?'次の問題へ':'結果を見る';
 
-  // disable check
   document.getElementById('btnCheck').disabled=true;
   box.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
