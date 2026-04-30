@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>基準 例示一覧</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI",sans-serif;
+      background:#f2f2f7;
+      min-height:100vh;
+      -webkit-text-size-adjust:100%;
+    }
+
+    /* ── ヘッダー ── */
+    .header{
+      background:#1c1c1e;
+      color:#fff;
+      padding:12px 16px;
+      padding-top:max(12px,env(safe-area-inset-top));
+      position:sticky;top:0;z-index:100;
+      display:flex;align-items:center;gap:8px;
+    }
+    .header h1{font-size:17px;font-weight:600;flex:1}
+    #backBtn{
+      background:none;border:none;color:#0a84ff;
+      font-size:16px;cursor:pointer;
+      padding:4px 0;display:none;
+      align-items:center;gap:2px;white-space:nowrap;
+    }
+
+    /* ── インデックス ── */
+    #indexView{padding:0 0 40px}
+    .sec-label{
+      font-size:11px;font-weight:600;letter-spacing:.6px;
+      color:#6e6e73;text-transform:uppercase;
+      padding:22px 16px 8px;
+    }
+    .card-list{
+      background:#fff;border-radius:12px;
+      margin:0 16px;overflow:hidden;
+    }
+    .card-item{
+      display:flex;align-items:center;
+      padding:13px 16px;
+      border-bottom:.5px solid #e5e5ea;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:background .1s;
+    }
+    .card-item:last-child{border-bottom:none}
+    .card-item:active{background:#f2f2f7}
+    .dot{width:10px;height:10px;border-radius:50%;margin-right:12px;flex-shrink:0}
+    .card-text{flex:1;min-width:0}
+    .card-title{font-size:15px;color:#1c1c1e;line-height:1.4}
+    .card-ref{font-size:11px;color:#8e8e93;margin-top:2px}
+    .card-count{font-size:12px;color:#8e8e93;margin-right:6px;white-space:nowrap}
+    .chevron{color:#c7c7cc;font-size:16px;line-height:1}
+
+    /* ── 詳細画面 ── */
+    #detailView{display:none;padding:0 0 40px}
+    .dh-box{
+      background:#fff;margin:12px 16px;
+      border-radius:12px;padding:14px 16px;
+    }
+    .dh-ref{font-size:12px;color:#8e8e93;margin-bottom:4px}
+    .dh-title{font-size:18px;font-weight:700;color:#1c1c1e;line-height:1.3}
+    .note-box{
+      margin:0 16px 12px;
+      font-size:13px;color:#3a3a3c;
+      background:#fff8e1;border-radius:10px;
+      padding:10px 14px;border-left:3px solid #ff9f0a;
+      line-height:1.5;
+    }
+    .items-card{
+      background:#fff;border-radius:12px;
+      margin:0 16px;overflow:hidden;
+    }
+    .group-hd{
+      font-size:12px;font-weight:700;
+      color:#fff;padding:8px 16px;
+    }
+    .item-row{
+      display:flex;align-items:flex-start;
+      padding:11px 16px;
+      border-bottom:.5px solid #e5e5ea;
+    }
+    .item-row:last-child{border-bottom:none}
+    .item-num{
+      font-size:13px;font-weight:600;
+      min-width:26px;padding-top:1px;flex-shrink:0;
+    }
+    .item-text{font-size:15px;color:#1c1c1e;line-height:1.55}
+    .term-row{
+      padding:12px 16px;
+      border-bottom:.5px solid #e5e5ea;
+    }
+    .term-row:last-child{border-bottom:none}
+    .term-name{font-size:15px;font-weight:600;margin-bottom:5px;line-height:1.4}
+    .term-desc{font-size:13px;color:#636366;line-height:1.55}
+  </style>
+</head>
+<body>
+<div class="header">
+  <button id="backBtn" onclick="showIndex()">❮ 戻る</button>
+  <h1 id="headerTitle">基準 例示一覧</h1>
+</div>
+
+<div id="indexView"></div>
+<div id="detailView"></div>
+
+<script>
+/* ══════════════════════════════════════
+   セクション定義（色分け）
+══════════════════════════════════════ */
+const SECS = [
+  {id:"ruikei",  label:"不動産の類型",         color:"#5e5ce6"},
+  {id:"ippan",   label:"価格形成要因：一般的要因", color:"#0a84ff"},
+  {id:"chiiki",  label:"価格形成要因：地域要因",  color:"#30d158"},
+  {id:"kobetsu", label:"価格形成要因：個別的要因", color:"#ff9f0a"},
+  {id:"kakaku",  label:"価格・賃料の種類",       color:"#ff375f"},
+  {id:"shuho",   label:"鑑定評価手法",          color:"#64d2ff"},
+  {id:"chingire",label:"賃料",                 color:"#bf5af2"},
+];
+
+/* ══════════════════════════════════════
+   データ
+   item の種類:
+     string          → 番号付きリスト
+     {type:"group"}  → グループヘッダー＋サブリスト
+     {type:"term"}   → 用語＋説明
+══════════════════════════════════════ */
+const DATA = [
+
+/* ── 類型 ─────────────────────────── */
+{id:"ruikei_takuchi", sec:"ruikei",
+ title:"宅地の類型", ref:"総論第２章 第２節",
+ items:[
+  {type:"term", name:"更地",
+   desc:"建物等の定着物がなく、かつ、使用収益を制約する権利の付着していない宅地"},
+  {type:"term", name:"建付地",
+   desc:"建物等の用に供されている敷地で建物等及びその敷地が同一の所有者に属している宅地"},
+  {type:"term", name:"借地権",
+   desc:"借地借家法（廃止前の借地法を含む）に基づく借地権（建物の所有を目的とする地上権又は土地の賃借権）"},
+  {type:"term", name:"底地",
+   desc:"宅地について借地権の付着している場合における当該宅地の所有権"},
+  {type:"term", name:"区分地上権",
+   desc:"工作物を所有するため、地下又は空間に上下の範囲を定めて設定された地上権"},
+]},
+
+{id:"ruikei_tatemono", sec:"ruikei",
+ title:"建物及びその敷地の類型", ref:"総論第２章 第２節",
+ items:[
+  {type:"term", name:"自用の建物及びその敷地",
+   desc:"建物所有者とその敷地の所有者とが同一人であり、その所有者による使用収益を制約する権利の付着していない場合における当該建物及びその敷地"},
+  {type:"term", name:"貸家及びその敷地",
+   desc:"建物所有者とその敷地の所有者とが同一人であるが、建物が賃貸借に供されている場合における当該建物及びその敷地"},
+  {type:"term", name:"借地権付建物",
+   desc:"借地権を権原とする建物が存する場合における当該建物及び借地権"},
+  {type:"term", name:"区分所有建物及びその敷地",
+   desc:"建物の区分所有等に関する法律第２条第３項に規定する専有部分並びに当該専有部分に係る共用部分の共有持分及び敷地利用権"},
+]},
+
+/* ── 一般的要因 ──────────────────── */
+{id:"ippan_yoin", sec:"ippan",
+ title:"一般的要因", ref:"総論第３章 第１節",
+ items:[
+  {type:"group", name:"Ⅰ．自然的要因", items:[
+   "地質、地盤等の状態",
+   "土壌及び土層の状態",
+   "地勢の状態",
+   "地理的位置関係",
+   "気象の状態",
+  ]},
+  {type:"group", name:"Ⅱ．社会的要因", items:[
+   "人口の状態",
+   "家族構成及び世帯分離の状態",
+   "都市形成及び公共施設の整備の状態",
+   "教育及び社会福祉の状態",
+   "不動産の取引及び使用収益の慣行",
+   "建築様式等の状態",
+   "情報化の進展の状態",
+   "生活様式等の状態",
+  ]},
+  {type:"group", name:"Ⅲ．経済的要因", items:[
+   "貯蓄、消費、投資及び国際収支の状態",
+   "財政及び金融の状態",
+   "物価、賃金、雇用及び企業活動の状態",
+   "税負担の状態",
+   "企業会計制度の状態",
+   "技術革新及び産業構造の状態",
+   "交通体系の状態",
+   "国際化の状態",
+  ]},
+  {type:"group", name:"Ⅳ．行政的要因", items:[
+   "土地利用に関する計画及び規制の状態",
+   "土地及び建築物の構造、防災等に関する規制の状態",
+   "宅地及び住宅に関する施策の状態",
+   "不動産に関する税制の状態",
+   "不動産の取引に関する規制の状態",
+  ]},
+]},
+
+/* ── 地域要因 ────────────────────── */
+{id:"chiiki_jutaku", sec:"chiiki",
+ title:"地域要因：住宅地域", ref:"総論第３章 第２節 Ⅰ-１",
+ items:[
+  "日照、温度、湿度、風向等の気象の状態",
+  "街路の幅員、構造等の状態",
+  "都心との距離及び交通施設の状態",
+  "商業施設の配置の状態",
+  "上下水道、ガス等の供給・処理施設の状態",
+  "情報通信基盤の整備の状態",
+  "公共施設、公益的施設等の配置の状態",
+  "汚水処理場等の嫌悪施設等の有無",
+  "洪水、地すべり等の災害の発生の危険性",
+  "騒音、大気の汚染、土壌汚染等の公害の発生の程度",
+  "各画地の面積、配置及び利用の状態",
+  "住宅、生垣、街路修景等の街並みの状態",
+  "眺望、景観等の自然的環境の良否",
+  "土地利用に関する計画及び規制の状態",
+]},
+
+{id:"chiiki_shogyo", sec:"chiiki",
+ title:"地域要因：商業地域（特有のもの）", ref:"総論第３章 第２節 Ⅰ-２",
+ note:"住宅地域の地域要因のほか、商業地域特有のもの",
+ items:[
+  "商業施設又は業務施設の種類、規模、集積度等の状態",
+  "商業背後地及び顧客の質と量",
+  "顧客及び従業員の交通手段の状態",
+  "商品の搬入及び搬出の利便性",
+  "街路の回遊性、アーケード等の状態",
+  "営業の種別及び競争の状態",
+  "当該地域の経営者の創意と資力",
+  "繁華性の程度及び盛衰の動向",
+  "駐車施設の整備の状態",
+  "行政上の助成及び規制の程度",
+]},
+
+{id:"chiiki_kogyo", sec:"chiiki",
+ title:"地域要因：工業地域（特有のもの）", ref:"総論第３章 第２節 Ⅰ-３",
+ note:"住宅地域の地域要因のほか、工業地域特有のもの",
+ items:[
+  "幹線道路、鉄道、港湾、空港等の輸送施設の整備の状況",
+  "労働力確保の難易",
+  "製品販売市場及び原材料仕入市場との位置関係",
+  "動力資源及び用排水に関する費用",
+  "関連産業との位置関係",
+  "水質の汚濁、大気の汚染等の公害の発生の危険性",
+  "行政上の助成及び規制の程度",
+]},
+
+{id:"chiiki_nochi", sec:"chiiki",
+ title:"地域要因：農地地域", ref:"総論第３章 第２節 Ⅱ",
+ items:[
+  "日照、温度、湿度、風雨等の気象の状態",
+  "起伏、高低等の地勢の状態",
+  "土壌及び土層の状態",
+  "水利及び水質の状態",
+  "洪水、地すべり等の災害の発生の危険性",
+  "道路等の整備の状態",
+  "集落との位置関係",
+  "集荷地又は産地市場との位置関係",
+  "消費地との距離及び輸送施設の状態",
+  "行政上の助成及び規制の程度",
+]},
+
+{id:"chiiki_rinchi", sec:"chiiki",
+ title:"地域要因：林地地域", ref:"総論第３章 第２節 Ⅲ",
+ items:[
+  "日照、温度、湿度、風雨等の気象の状態",
+  "標高、地勢等の状態",
+  "土壌及び土層の状態",
+  "林道等の整備の状態",
+  "労働力確保の難易",
+  "行政上の助成及び規制の程度",
+]},
+
+/* ── 個別的要因（土地） ─────────── */
+{id:"kobetsu_jutaku", sec:"kobetsu",
+ title:"個別的要因：住宅地（土地）", ref:"総論第３章 第３節 Ⅰ-１(1)",
+ items:[
+  "地勢、地質、地盤等",
+  "日照、通風及び乾湿",
+  "間口、奥行、地積、形状等",
+  "高低、角地その他の接面街路との関係",
+  "接面街路の幅員、構造等の状態",
+  "接面街路の系統及び連続性",
+  "交通施設との距離",
+  "商業施設との接近の程度",
+  "公共施設、公益的施設等との接近の程度",
+  "汚水処理場等の嫌悪施設等との接近の程度",
+  "隣接不動産等周囲の状態",
+  "上下水道、ガス等の供給・処理施設の有無及びその利用の難易",
+  "情報通信基盤の利用の難易",
+  "埋蔵文化財及び地下埋設物の有無並びにその状態",
+  "土壌汚染の有無及びその状態",
+  "公法上及び私法上の規制、制約等",
+]},
+
+{id:"kobetsu_shogyo", sec:"kobetsu",
+ title:"個別的要因：商業地（土地）", ref:"総論第３章 第３節 Ⅰ-１(2)",
+ items:[
+  "地勢、地質、地盤等",
+  "間口、奥行、地積、形状等",
+  "高低、角地その他の接面街路との関係",
+  "接面街路の幅員、構造等の状態",
+  "接面街路の系統及び連続性",
+  "商業地域の中心への接近性",
+  "主要交通機関との接近性",
+  "顧客の流動の状態との適合性",
+  "隣接不動産等周囲の状態",
+  "上下水道、ガス等の供給・処理施設の有無及びその利用の難易",
+  "情報通信基盤の利用の難易",
+  "埋蔵文化財及び地下埋設物の有無並びにその状態",
+  "土壌汚染の有無及びその状態",
+  "公法上及び私法上の規制、制約等",
+]},
+
+{id:"kobetsu_kogyo", sec:"kobetsu",
+ title:"個別的要因：工業地（土地）", ref:"総論第３章 第３節 Ⅰ-１(3)",
+ items:[
+  "地勢、地質、地盤等",
+  "間口、奥行、地積、形状等",
+  "高低、角地その他の接面街路との関係",
+  "接面街路の幅員、構造等の状態",
+  "接面街路の系統及び連続性",
+  "従業員の通勤等のための主要交通機関との接近性",
+  "幹線道路、鉄道、港湾、空港等の輸送施設との位置関係",
+  "電力等の動力資源の状態及び引込の難易",
+  "用排水等の供給・処理施設の整備の必要性",
+  "上下水道、ガス等の供給・処理施設の有無及びその利用の難易",
+  "情報通信基盤の利用の難易",
+  "埋蔵文化財及び地下埋設物の有無並びにその状態",
+  "土壌汚染の有無及びその状態",
+  "公法上及び私法上の規制、制約等",
+]},
+
+{id:"kobetsu_nochi", sec:"kobetsu",
+ title:"個別的要因：農地", ref:"総論第３章 第３節 Ⅰ-２",
+ items:[
+  "日照、乾湿、雨量等の状態",
+  "土壌及び土層の状態",
+  "農道の状態",
+  "灌漑排水の状態",
+  "耕うんの難易",
+  "集落との接近の程度",
+  "集荷地との接近の程度",
+  "災害の危険性の程度",
+  "公法上及び私法上の規制、制約等",
+]},
+
+{id:"kobetsu_rinchi", sec:"kobetsu",
+ title:"個別的要因：林地", ref:"総論第３章 第３節 Ⅰ-３",
+ items:[
+  "日照、乾湿、雨量等の状態",
+  "標高、地勢等の状態",
+  "土壌及び土層の状態",
+  "木材の搬出、運搬等の難易",
+  "管理の難易",
+  "公法上及び私法上の規制、制約等",
+]},
+
+/* ── 個別的要因（建物） ─────────── */
+{id:"kobetsu_tatemono_kyotsu", sec:"kobetsu",
+ title:"個別的要因：建物（各用途共通）", ref:"総論第３章 第３節 Ⅱ",
+ items:[
+  "建築（新築、増改築等又は移転）の年次",
+  "面積、高さ、構造、材質等",
+  "設計、設備等の機能性",
+  "施工の質と量",
+  "耐震性、耐火性等建物の性能",
+  "維持管理の状態",
+  "有害な物質の使用の有無及びその状態",
+  "建物とその環境との適合の状態",
+  "公法上及び私法上の規制、制約等",
+]},
+
+{id:"kobetsu_tatemono_yoto", sec:"kobetsu",
+ title:"個別的要因：建物（用途毎の特有事項）", ref:"総論第３章 第３節 Ⅱ 留意事項(2)",
+ items:[
+  {type:"group", name:"① 住宅", items:[
+   "屋根、外壁、基礎、床、内装",
+   "間取り",
+   "台所・浴室・便所等の給排水設備・衛生設備の状況",
+   "（区分所有建物の場合）各論第１章第２節の事項",
+   "住宅品質確保法に基づく性能表示",
+   "長期優良住宅の認定等",
+  ]},
+  {type:"group", name:"② 事務所ビル", items:[
+   "基準階床面積",
+   "天井高",
+   "床荷重",
+   "情報通信対応設備・空調設備・電気設備等の状況",
+   "共用施設の状態",
+   "（大規模高層）エレベーターの台数・配置",
+   "（大規模高層）建物内店舗等の区画の面積・配置",
+  ]},
+  {type:"group", name:"③ 商業施設", items:[
+   "各階の床面積",
+   "天井高",
+   "（大規模SC）売場面積、客動線、商品搬入動線",
+   "（大規模SC）防災設備の状況",
+   "（大規模SC）バリアフリー化の状況",
+   "施設立地・規模等に関する法令等",
+  ]},
+  {type:"group", name:"④ 物流施設", items:[
+   "階数、各階の床面積",
+   "天井高、柱間隔、床荷重",
+   "空調設備、エレベーター等",
+   "（大規模）梱包・仕分け・流通加工・配送等の機能に応じた設備",
+   "（大規模）各階への乗入を可能とする自走式車路の有無",
+  ]},
+]},
+
+{id:"kobetsu_shikichi", sec:"kobetsu",
+ title:"個別的要因：建物及びその敷地", ref:"総論第３章 第３節 Ⅲ",
+ note:"土地・建物の個別的要因に例示したもののほか",
+ items:[
+  "敷地内における建物、駐車場、通路、庭等の配置",
+  "建物と敷地の規模の対応関係等、建物等と敷地との適応の状態",
+  "修繕計画・管理計画の良否とその実施の状態",
+]},
+
+{id:"kobetsu_chintai", sec:"kobetsu",
+ title:"個別的要因：賃貸経営管理（賃貸用不動産）", ref:"総論第３章 第３節 Ⅲ",
+ items:[
+  "賃借人の状況及び賃貸借契約の内容",
+  "貸室の稼働状況",
+  "躯体・設備・内装等の資産区分及び修繕費用等の負担区分",
+]},
+
+{id:"kobetsu_kukaku_mune", sec:"kobetsu",
+ title:"個別的要因：区分所有建物（一棟全体）", ref:"各論第１章 第２節 １.(1)",
+ items:[
+  {type:"group", name:"① 建物に係る要因", items:[
+   "建築（新築、増改築等又は移転）の年次",
+   "面積、高さ、構造、材質等",
+   "設計、設備等の機能性",
+   "施工の質と量",
+   "玄関、集会室等の施設の状態",
+   "建物の階数",
+   "建物の用途及び利用の状態",
+   "維持管理の状態",
+   "居住者、店舗等の構成の状態",
+   "耐震性、耐火性等建物の性能",
+   "有害な物質の使用の有無及びその状態",
+  ]},
+  {type:"group", name:"② 敷地に係る要因", items:[
+   "敷地の形状及び空地部分の広狭の程度",
+   "敷地内施設の状態",
+   "敷地の規模",
+   "敷地に関する権利の態様",
+  ]},
+  {type:"group", name:"③ 建物及びその敷地に係る要因", items:[
+   "敷地内における建物及び附属施設の配置の状態",
+   "建物と敷地の規模の対応関係",
+   "長期修繕計画の有無及びその良否並びに修繕積立金の額",
+  ]},
+]},
+
+{id:"kobetsu_kukaku_senyu", sec:"kobetsu",
+ title:"個別的要因：区分所有建物（専有部分）", ref:"各論第１章 第２節 １.(2)",
+ items:[
+  "階層及び位置",
+  "日照、眺望及び景観の良否",
+  "室内の仕上げ及び維持管理の状態",
+  "専有面積及び間取りの状態",
+  "隣接不動産等の利用の状態",
+  "エレベーター等の共用施設の利便性の状態",
+  "敷地に関する権利の態様及び持分",
+  "区分所有者の管理費等の滞納の有無",
+]},
+
+/* ── 価格・賃料の種類 ──────────── */
+{id:"gentei_kakaku", sec:"kakaku",
+ title:"限定価格を求める場合", ref:"総論第５章 第３節 Ⅰ-２",
+ items:[
+  "借地権者が底地の併合を目的とする売買に関連する場合",
+  "隣接不動産の併合を目的とする売買に関連する場合",
+  "経済合理性に反する不動産の分割を前提とする売買に関連する場合",
+]},
+
+{id:"tokutei_kakaku", sec:"kakaku",
+ title:"特定価格を求める場合", ref:"総論第５章 第３節 Ⅰ-３",
+ items:[
+  "各論第３章第１節に規定する証券化対象不動産に係る鑑定評価目的の下で、投資家に示すための投資採算価値を表す価格を求める場合",
+  "民事再生法に基づく鑑定評価目的の下で、早期売却を前提とした価格を求める場合",
+  "会社更生法又は民事再生法に基づく鑑定評価目的の下で、事業の継続を前提とした価格を求める場合",
+]},
+
+{id:"tokushu_kakaku", sec:"kakaku",
+ title:"特殊価格を求める場合", ref:"総論第５章 第３節 Ⅰ-４",
+ items:[
+  "文化財の指定を受けた建造物について、その保存等に主眼をおいた鑑定評価を行う場合",
+  "宗教建築物について、その保存等に主眼をおいた鑑定評価を行う場合",
+  "現況による管理を継続する公共公益施設の用に供されている不動産について、その保存等に主眼をおいた鑑定評価を行う場合",
+]},
+
+{id:"gentei_chingire", sec:"kakaku",
+ title:"限定賃料を求める場合", ref:"総論第５章 第３節 Ⅱ-２",
+ items:[
+  "隣接不動産の併合使用を前提とする賃貸借等に関連する場合",
+  "経済合理性に反する不動産の分割使用を前提とする賃貸借等に関連する場合",
+]},
+
+/* ── 鑑定評価手法 ────────────────── */
+{id:"kangen_riritsu", sec:"shuho",
+ title:"還元利回りを求める方法", ref:"総論第７章（収益還元法）",
+ items:[
+  {type:"term", name:"(ア) 類似の不動産の取引事例との比較から求める方法",
+   desc:"対象不動産と類似の不動産の取引事例から求められる利回りをもとに、取引時点及び取引事情並びに地域要因及び個別的要因の違いに応じた補正を行うことにより求める"},
+  {type:"term", name:"(イ) 借入金と自己資金に係る還元利回りから求める方法",
+   desc:"対象不動産の取得の際の資金調達上の構成要素（借入金及び自己資金）に係る各還元利回りを各々の構成割合により加重平均して求める"},
+  {type:"term", name:"(ウ) 土地と建物に係る還元利回りから求める方法",
+   desc:"物理的な構成要素（土地及び建物）に係る各還元利回りを各々の価格の構成割合により加重平均して求める"},
+  {type:"term", name:"(エ) 割引率との関係から求める方法",
+   desc:"割引率をもとに対象不動産の純収益の変動率を考慮して求める"},
+]},
+
+{id:"waribiki_ritsu", sec:"shuho",
+ title:"割引率を求める方法", ref:"総論第７章（収益還元法）",
+ items:[
+  {type:"term", name:"(ア) 類似の不動産の取引事例との比較から求める方法",
+   desc:"対象不動産と類似の不動産の取引事例から求められる割引率をもとに、取引時点及び取引事情並びに地域要因及び個別的要因の違いに応じた補正を行うことにより求める"},
+  {type:"term", name:"(イ) 借入金と自己資金に係る割引率から求める方法",
+   desc:"対象不動産の取得の際の資金調達上の構成要素（借入金及び自己資金）に係る各割引率を各々の構成割合により加重平均して求める"},
+  {type:"term", name:"(ウ) 金融資産の利回りに不動産の個別性を加味して求める方法",
+   desc:"債券等の金融資産の利回りをもとに、対象不動産の投資対象としての危険性、非流動性、管理の困難性、資産としての安全性等の個別性を加味することにより求める"},
+]},
+
+{id:"jigyoyo_fudosan", sec:"shuho",
+ title:"事業用不動産の例示", ref:"総論第７章（収益還元法）留意事項③",
+ items:[
+  "ホテル等の宿泊施設",
+  "ゴルフ場等のレジャー施設",
+  "病院、有料老人ホーム等の医療・福祉施設",
+  "百貨店や多数の店舗により構成されるショッピングセンター等の商業施設",
+]},
+
+/* ── 賃料 ────────────────────────── */
+{id:"keizoku_yoin_chidai", sec:"chingire",
+ title:"継続賃料の価格形成要因：宅地（地代）", ref:"各論第２章 第１節 Ⅱ-１",
+ note:"直近合意時点から価格時点までの期間における要因が中心",
+ items:[
+  "近隣地域若しくは同一需給圏内の類似地域等における宅地の賃料又は同一需給圏内の代替競争不動産の賃料の推移及びその改定の程度",
+  "土地価格の推移",
+  "公租公課の推移",
+  "契約の内容及びそれに関する経緯",
+  "賃貸人等又は賃借人等の近隣地域の発展に対する寄与度",
+]},
+
+]; /* DATA end */
+
+/* ══════════════════════════════════════
+   ユーティリティ
+══════════════════════════════════════ */
+function secColor(secId){
+  const s = SECS.find(s=>s.id===secId);
+  return s ? s.color : "#636366";
+}
+function itemCount(cat){
+  let n=0;
+  cat.items.forEach(it=>{
+    if(typeof it==="string") n++;
+    else if(it.type==="group") n+=it.items.length;
+    else n++;
+  });
+  return n;
+}
+
+/* ══════════════════════════════════════
+   インデックス描画
+══════════════════════════════════════ */
+function renderIndex(){
+  let html="";
+  SECS.forEach(sec=>{
+    const cats = DATA.filter(d=>d.sec===sec.id);
+    if(!cats.length) return;
+    html+=`<div class="sec-label">${sec.label}</div><div class="card-list">`;
+    cats.forEach(cat=>{
+      const cnt = itemCount(cat);
+      html+=`
+        <div class="card-item" onclick="showDetail('${cat.id}')">
+          <div class="dot" style="background:${sec.color}"></div>
+          <div class="card-text">
+            <div class="card-title">${cat.title}</div>
+            <div class="card-ref">${cat.ref}</div>
+          </div>
+          <div class="card-count">${cnt}項目</div>
+          <div class="chevron">›</div>
+        </div>`;
+    });
+    html+=`</div>`;
+  });
+  document.getElementById("indexView").innerHTML=html;
+}
+
+/* ══════════════════════════════════════
+   詳細画面描画
+══════════════════════════════════════ */
+function renderDetail(cat){
+  const color = secColor(cat.sec);
+  let html=`
+    <div class="dh-box">
+      <div class="dh-ref">${cat.ref}</div>
+      <div class="dh-title">${cat.title}</div>
+    </div>`;
+
+  if(cat.note){
+    html+=`<div class="note-box">📌 ${cat.note}</div>`;
+  }
+
+  html+=`<div class="items-card">`;
+  let globalIdx=0;
+
+  cat.items.forEach(it=>{
+    if(typeof it==="string"){
+      globalIdx++;
+      html+=`<div class="item-row">
+        <div class="item-num" style="color:${color}">${globalIdx}</div>
+        <div class="item-text">${it}</div>
+      </div>`;
+    } else if(it.type==="group"){
+      html+=`<div class="group-hd" style="background:${color}">${it.name}</div>`;
+      it.items.forEach((sub,si)=>{
+        html+=`<div class="item-row">
+          <div class="item-num" style="color:${color}">${si+1}</div>
+          <div class="item-text">${sub}</div>
+        </div>`;
+      });
+    } else if(it.type==="term"){
+      html+=`<div class="term-row">
+        <div class="term-name" style="color:${color}">${it.name}</div>
+        <div class="term-desc">${it.desc}</div>
+      </div>`;
+    }
+  });
+
+  html+=`</div>`;
+  document.getElementById("detailView").innerHTML=html;
+}
+
+/* ══════════════════════════════════════
+   ナビゲーション
+══════════════════════════════════════ */
+function showDetail(id){
+  const cat = DATA.find(d=>d.id===id);
+  if(!cat) return;
+  renderDetail(cat);
+  document.getElementById("indexView").style.display="none";
+  document.getElementById("detailView").style.display="block";
+  document.getElementById("backBtn").style.display="flex";
+  document.getElementById("headerTitle").textContent=cat.title;
+  window.scrollTo(0,0);
+}
+
+function showIndex(){
+  document.getElementById("indexView").style.display="block";
+  document.getElementById("detailView").style.display="none";
+  document.getElementById("backBtn").style.display="none";
+  document.getElementById("headerTitle").textContent="基準 例示一覧";
+  window.scrollTo(0,0);
+}
+
+/* ── 起動 ── */
+renderIndex();
+</script>
+</body>
+</html>
