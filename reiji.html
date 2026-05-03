@@ -921,6 +921,60 @@ function showIndex(){
   window.scrollTo(0, savedScrollY);
 }
 
+/* ── スワイプで戻る ── */
+(function(){
+  let startX = 0, startY = 0, dragging = false;
+
+  // スワイプ中に表示するオーバーレイ（詳細画面を左にスライド）
+  const detail = document.getElementById("detailView");
+
+  document.addEventListener("touchstart", function(e){
+    const t = e.touches[0];
+    startX = t.clientX;
+    startY = t.clientY;
+    dragging = false;
+  }, {passive: true});
+
+  document.addEventListener("touchmove", function(e){
+    if(document.getElementById("detailView").style.display === "none") return;
+    const t = e.touches[0];
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    // 左端20px以内から開始 かつ 横方向の動きが縦より大きい場合のみ
+    if(!dragging && startX < 30 && Math.abs(dx) > Math.abs(dy) && dx > 0){
+      dragging = true;
+    }
+    if(dragging && dx > 0){
+      detail.style.transform = `translateX(${Math.min(dx, window.innerWidth)}px)`;
+      detail.style.transition = "none";
+    }
+  }, {passive: true});
+
+  document.addEventListener("touchend", function(e){
+    if(!dragging) return;
+    dragging = false;
+    const dx = e.changedTouches[0].clientX - startX;
+    if(dx > window.innerWidth * 0.35){
+      // 35%以上スワイプで戻る
+      detail.style.transition = "transform .25s ease";
+      detail.style.transform = `translateX(${window.innerWidth}px)`;
+      setTimeout(function(){
+        detail.style.transform = "";
+        detail.style.transition = "";
+        showIndex();
+      }, 250);
+    } else {
+      // 戻らない場合は元の位置に戻す
+      detail.style.transition = "transform .2s ease";
+      detail.style.transform = "translateX(0)";
+      setTimeout(function(){
+        detail.style.transform = "";
+        detail.style.transition = "";
+      }, 200);
+    }
+  }, {passive: true});
+})();
+
 /* ── 起動 ── */
 renderIndex();
 </script>
