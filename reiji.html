@@ -784,9 +784,12 @@ function renderDetail(cat){
 /* ══════════════════════════════════════
    ナビゲーション
 ══════════════════════════════════════ */
+let savedScrollY = 0;
+
 function showDetail(id){
   const cat = DATA.find(d=>d.id===id);
   if(!cat) return;
+  savedScrollY = window.scrollY;
   renderDetail(cat);
   document.getElementById("indexView").style.display="none";
   document.getElementById("detailView").style.display="block";
@@ -800,7 +803,7 @@ function showIndex(){
   document.getElementById("detailView").style.display="none";
   document.getElementById("backBtn").style.display="none";
   document.getElementById("headerTitle").textContent="基準 例示一覧";
-  window.scrollTo(0,0);
+  window.scrollTo(0, savedScrollY);
 }
 
 /* ── 起動 ── */
