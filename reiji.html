@@ -115,15 +115,14 @@
    セクション定義（色分け）
 ══════════════════════════════════════ */
 const SECS = [
-  {id:"ruikei",  label:"不動産の類型",         color:"#5e5ce6"},
-  {id:"ippan",   label:"価格形成要因：一般的要因", color:"#0a84ff"},
-  {id:"chiiki",  label:"価格形成要因：地域要因",  color:"#30d158"},
-  {id:"kobetsu", label:"価格形成要因：個別的要因", color:"#ff9f0a"},
-  {id:"kakaku",  label:"価格・賃料の種類",       color:"#ff375f"},
-  {id:"shuho",   label:"鑑定評価手法",          color:"#64d2ff"},
-  {id:"chingire",  label:"賃料",                   color:"#bf5af2"},
-  {id:"tetsuzuki", label:"鑑定評価の手順・確認",     color:"#ff6b35"},
-  {id:"shoken",    label:"証券化対象不動産（DCF法）", color:"#00c7be"},
+  {id:"soron2",   label:"総論第２章　不動産の類型",        color:"#5e5ce6"},
+  {id:"soron3",   label:"総論第３章　価格形成要因",         color:"#0a84ff"},
+  {id:"soron5",   label:"総論第５章　価格・賃料の種類",     color:"#ff375f"},
+  {id:"soron7",   label:"総論第７章　鑑定評価の手法",       color:"#ff9f0a"},
+  {id:"soron8",   label:"総論第８章　鑑定評価の手順",       color:"#ff6b35"},
+  {id:"kakuron1", label:"各論第１章　価格に関する鑑定評価", color:"#30d158"},
+  {id:"kakuron2", label:"各論第２章　賃料に関する鑑定評価", color:"#bf5af2"},
+  {id:"kakuron3", label:"各論第３章　証券化対象不動産",     color:"#00c7be"},
 ];
 
 /* ══════════════════════════════════════
@@ -136,7 +135,7 @@ const SECS = [
 const DATA = [
 
 /* ── 類型 ─────────────────────────── */
-{id:"ruikei_takuchi", sec:"ruikei",
+{id:"ruikei_takuchi", sec:"soron2",
  title:"宅地の類型", ref:"総論第２章 第２節",
  items:[
   {type:"term", name:"更地",
@@ -151,7 +150,7 @@ const DATA = [
    desc:"工作物を所有するため、地下又は空間に上下の範囲を定めて設定された地上権"},
 ]},
 
-{id:"ruikei_tatemono", sec:"ruikei",
+{id:"ruikei_tatemono", sec:"soron2",
  title:"建物及びその敷地の類型", ref:"総論第２章 第２節",
  items:[
   {type:"term", name:"自用の建物及びその敷地",
@@ -165,7 +164,7 @@ const DATA = [
 ]},
 
 /* ── 一般的要因 ──────────────────── */
-{id:"ippan_yoin", sec:"ippan",
+{id:"ippan_yoin", sec:"soron3",
  title:"一般的要因", ref:"総論第３章 第１節",
  items:[
   {type:"group", name:"Ⅰ．自然的要因", items:[
@@ -205,7 +204,7 @@ const DATA = [
 ]},
 
 /* ── 地域要因 ────────────────────── */
-{id:"chiiki_jutaku", sec:"chiiki",
+{id:"chiiki_jutaku", sec:"soron3",
  title:"地域要因：住宅地域", ref:"総論第３章 第２節 Ⅰ-１",
  items:[
   "日照、温度、湿度、風向等の気象の状態",
@@ -224,7 +223,7 @@ const DATA = [
   "土地利用に関する計画及び規制の状態",
 ]},
 
-{id:"chiiki_shogyo", sec:"chiiki",
+{id:"chiiki_shogyo", sec:"soron3",
  title:"地域要因：商業地域（特有のもの）", ref:"総論第３章 第２節 Ⅰ-２",
  note:"住宅地域の地域要因のほか、商業地域特有のもの",
  items:[
@@ -240,7 +239,7 @@ const DATA = [
   "行政上の助成及び規制の程度",
 ]},
 
-{id:"chiiki_kogyo", sec:"chiiki",
+{id:"chiiki_kogyo", sec:"soron3",
  title:"地域要因：工業地域（特有のもの）", ref:"総論第３章 第２節 Ⅰ-３",
  note:"住宅地域の地域要因のほか、工業地域特有のもの",
  items:[
@@ -253,7 +252,7 @@ const DATA = [
   "行政上の助成及び規制の程度",
 ]},
 
-{id:"chiiki_nochi", sec:"chiiki",
+{id:"chiiki_nochi", sec:"soron3",
  title:"地域要因：農地地域", ref:"総論第３章 第２節 Ⅱ",
  items:[
   "日照、温度、湿度、風雨等の気象の状態",
@@ -268,7 +267,7 @@ const DATA = [
   "行政上の助成及び規制の程度",
 ]},
 
-{id:"chiiki_rinchi", sec:"chiiki",
+{id:"chiiki_rinchi", sec:"soron3",
  title:"地域要因：林地地域", ref:"総論第３章 第２節 Ⅲ",
  items:[
   "日照、温度、湿度、風雨等の気象の状態",
@@ -280,7 +279,7 @@ const DATA = [
 ]},
 
 /* ── 個別的要因（土地） ─────────── */
-{id:"kobetsu_jutaku", sec:"kobetsu",
+{id:"kobetsu_jutaku", sec:"soron3",
  title:"個別的要因：住宅地（土地）", ref:"総論第３章 第３節 Ⅰ-１(1)",
  items:[
   "地勢、地質、地盤等",
@@ -301,7 +300,7 @@ const DATA = [
   "公法上及び私法上の規制、制約等",
 ]},
 
-{id:"kobetsu_shogyo", sec:"kobetsu",
+{id:"kobetsu_shogyo", sec:"soron3",
  title:"個別的要因：商業地（土地）", ref:"総論第３章 第３節 Ⅰ-１(2)",
  items:[
   "地勢、地質、地盤等",
@@ -320,7 +319,7 @@ const DATA = [
   "公法上及び私法上の規制、制約等",
 ]},
 
-{id:"kobetsu_kogyo", sec:"kobetsu",
+{id:"kobetsu_kogyo", sec:"soron3",
  title:"個別的要因：工業地（土地）", ref:"総論第３章 第３節 Ⅰ-１(3)",
  items:[
   "地勢、地質、地盤等",
@@ -339,7 +338,7 @@ const DATA = [
   "公法上及び私法上の規制、制約等",
 ]},
 
-{id:"kobetsu_nochi", sec:"kobetsu",
+{id:"kobetsu_nochi", sec:"soron3",
  title:"個別的要因：農地", ref:"総論第３章 第３節 Ⅰ-２",
  items:[
   "日照、乾湿、雨量等の状態",
@@ -353,7 +352,7 @@ const DATA = [
   "公法上及び私法上の規制、制約等",
 ]},
 
-{id:"kobetsu_rinchi", sec:"kobetsu",
+{id:"kobetsu_rinchi", sec:"soron3",
  title:"個別的要因：林地", ref:"総論第３章 第３節 Ⅰ-３",
  items:[
   "日照、乾湿、雨量等の状態",
@@ -365,7 +364,7 @@ const DATA = [
 ]},
 
 /* ── 個別的要因（建物） ─────────── */
-{id:"kobetsu_tatemono_kyotsu", sec:"kobetsu",
+{id:"kobetsu_tatemono_kyotsu", sec:"soron3",
  title:"個別的要因：建物（各用途共通）", ref:"総論第３章 第３節 Ⅱ",
  items:[
   "建築（新築、増改築等又は移転）の年次",
@@ -379,7 +378,7 @@ const DATA = [
   "公法上及び私法上の規制、制約等",
 ]},
 
-{id:"kobetsu_tatemono_yoto", sec:"kobetsu",
+{id:"kobetsu_tatemono_yoto", sec:"soron3",
  title:"個別的要因：建物（用途毎の特有事項）", ref:"総論第３章 第３節 Ⅱ 留意事項(2)",
  items:[
   {type:"group", name:"① 住宅", items:[
@@ -416,7 +415,7 @@ const DATA = [
   ]},
 ]},
 
-{id:"kobetsu_shikichi", sec:"kobetsu",
+{id:"kobetsu_shikichi", sec:"soron3",
  title:"個別的要因：建物及びその敷地", ref:"総論第３章 第３節 Ⅲ",
  note:"土地・建物の個別的要因に例示したもののほか",
  items:[
@@ -425,7 +424,7 @@ const DATA = [
   "修繕計画・管理計画の良否とその実施の状態",
 ]},
 
-{id:"kobetsu_chintai", sec:"kobetsu",
+{id:"kobetsu_chintai", sec:"soron3",
  title:"個別的要因：賃貸経営管理（賃貸用不動産）", ref:"総論第３章 第３節 Ⅲ",
  items:[
   "賃借人の状況及び賃貸借契約の内容",
@@ -433,7 +432,7 @@ const DATA = [
   "躯体・設備・内装等の資産区分及び修繕費用等の負担区分",
 ]},
 
-{id:"kobetsu_kukaku_mune", sec:"kobetsu",
+{id:"kobetsu_kukaku_mune", sec:"kakuron1",
  title:"個別的要因：区分所有建物（一棟全体）", ref:"各論第１章 第２節 １.(1)",
  items:[
   {type:"group", name:"① 建物に係る要因", items:[
@@ -462,7 +461,7 @@ const DATA = [
   ]},
 ]},
 
-{id:"kobetsu_kukaku_senyu", sec:"kobetsu",
+{id:"kobetsu_kukaku_senyu", sec:"kakuron1",
  title:"個別的要因：区分所有建物（専有部分）", ref:"各論第１章 第２節 １.(2)",
  items:[
   "階層及び位置",
@@ -476,7 +475,7 @@ const DATA = [
 ]},
 
 /* ── 価格・賃料の種類 ──────────── */
-{id:"gentei_kakaku", sec:"kakaku",
+{id:"gentei_kakaku", sec:"soron5",
  title:"限定価格を求める場合", ref:"総論第５章 第３節 Ⅰ-２",
  items:[
   "借地権者が底地の併合を目的とする売買に関連する場合",
@@ -484,7 +483,7 @@ const DATA = [
   "経済合理性に反する不動産の分割を前提とする売買に関連する場合",
 ]},
 
-{id:"tokutei_kakaku", sec:"kakaku",
+{id:"tokutei_kakaku", sec:"soron5",
  title:"特定価格を求める場合", ref:"総論第５章 第３節 Ⅰ-３",
  items:[
   "各論第３章第１節に規定する証券化対象不動産に係る鑑定評価目的の下で、投資家に示すための投資採算価値を表す価格を求める場合",
@@ -492,7 +491,7 @@ const DATA = [
   "会社更生法又は民事再生法に基づく鑑定評価目的の下で、事業の継続を前提とした価格を求める場合",
 ]},
 
-{id:"tokushu_kakaku", sec:"kakaku",
+{id:"tokushu_kakaku", sec:"soron5",
  title:"特殊価格を求める場合", ref:"総論第５章 第３節 Ⅰ-４",
  items:[
   "文化財の指定を受けた建造物について、その保存等に主眼をおいた鑑定評価を行う場合",
@@ -500,7 +499,7 @@ const DATA = [
   "現況による管理を継続する公共公益施設の用に供されている不動産について、その保存等に主眼をおいた鑑定評価を行う場合",
 ]},
 
-{id:"gentei_chingire", sec:"kakaku",
+{id:"gentei_chingire", sec:"soron5",
  title:"限定賃料を求める場合", ref:"総論第５章 第３節 Ⅱ-２",
  items:[
   "隣接不動産の併合使用を前提とする賃貸借等に関連する場合",
@@ -508,7 +507,7 @@ const DATA = [
 ]},
 
 /* ── 鑑定評価手法 ────────────────── */
-{id:"kangen_riritsu", sec:"shuho",
+{id:"kangen_riritsu", sec:"soron7",
  title:"還元利回りを求める方法", ref:"総論第７章（収益還元法）",
  items:[
   {type:"term", name:"(ア) 類似の不動産の取引事例との比較から求める方法",
@@ -521,7 +520,7 @@ const DATA = [
    desc:"割引率をもとに対象不動産の純収益の変動率を考慮して求める"},
 ]},
 
-{id:"waribiki_ritsu", sec:"shuho",
+{id:"waribiki_ritsu", sec:"soron7",
  title:"割引率を求める方法", ref:"総論第７章（収益還元法）",
  items:[
   {type:"term", name:"(ア) 類似の不動産の取引事例との比較から求める方法",
@@ -532,7 +531,7 @@ const DATA = [
    desc:"債券等の金融資産の利回りをもとに、対象不動産の投資対象としての危険性、非流動性、管理の困難性、資産としての安全性等の個別性を加味することにより求める"},
 ]},
 
-{id:"jigyoyo_fudosan", sec:"shuho",
+{id:"jigyoyo_fudosan", sec:"soron7",
  title:"事業用不動産の例示", ref:"総論第７章（収益還元法）留意事項③",
  items:[
   "ホテル等の宿泊施設",
@@ -542,7 +541,7 @@ const DATA = [
 ]},
 
 /* ── 賃料 ────────────────────────── */
-{id:"keizoku_yoin_chidai", sec:"chingire",
+{id:"keizoku_yoin_chidai", sec:"kakuron2",
  title:"継続賃料の価格形成要因：宅地（地代）", ref:"各論第２章 第１節 Ⅱ-１",
  note:"直近合意時点から価格時点までの期間における要因が中心",
  items:[
@@ -554,7 +553,7 @@ const DATA = [
 ]},
 
 /* ── 継続賃料（追加） ─────────────── */
-{id:"keizoku_yoin_yachin", sec:"chingire",
+{id:"keizoku_yoin_yachin", sec:"kakuron2",
  title:"継続賃料の価格形成要因：建物及びその敷地（家賃）", ref:"各論第２章 第２節 Ⅱ",
  note:"宅地（地代）の要因と同じ。ただし「土地価格」→「土地及び建物価格」、「底地に対する利回り」→「建物及びその敷地に対する利回り」と読み替える",
  items:[
@@ -566,7 +565,7 @@ const DATA = [
 ]},
 
 /* ── 鑑定評価の手順・確認 ──────────── */
-{id:"tetsuzuki_steps", sec:"tetsuzuki",
+{id:"tetsuzuki_steps", sec:"soron8",
  title:"鑑定評価の手順（10節）", ref:"総論第８章",
  note:"合理的かつ現実的な認識と判断に基づいた秩序的な手順",
  items:[
@@ -592,18 +591,7 @@ const DATA = [
    desc:"鑑定評価額が決定されたときは、鑑定評価報告書を作成する"},
 ]},
 
-{id:"shiryo_shurui", sec:"tetsuzuki",
- title:"資料の種類", ref:"総論第８章 第５節",
- items:[
-  {type:"term", name:"確認資料",
-   desc:"不動産の物的確認及び権利の態様の確認に必要な資料。登記事項証明書、土地又は建物等の図面、写真、地図等"},
-  {type:"term", name:"要因資料",
-   desc:"価格形成要因に照応する資料。一般的要因に係る一般資料、地域要因に係る地域資料、個別的要因に係る個別資料に分けられる"},
-  {type:"term", name:"事例資料",
-   desc:"鑑定評価の手法の適用に必要な現実の取引価格・賃料等に関する資料。建設事例・取引事例・収益事例・賃貸借等の事例等"},
-]},
-
-{id:"kenri_kakunin", sec:"tetsuzuki",
+{id:"kenri_kakunin", sec:"soron8",
  title:"権利の態様の確認（賃貸借契約）", ref:"総論第８章 第４節 Ⅱ 留意事項(2)",
  note:"賃貸借契約等に係る権利の態様の確認に当たって原則として確認すべき事項",
  items:[
@@ -616,7 +604,18 @@ const DATA = [
   "賃貸条件等に係る特約",
 ]},
 
-{id:"shisan_chosei", sec:"tetsuzuki",
+{id:"shiryo_shurui", sec:"soron8",
+ title:"資料の種類", ref:"総論第８章 第５節",
+ items:[
+  {type:"term", name:"確認資料",
+   desc:"不動産の物的確認及び権利の態様の確認に必要な資料。登記事項証明書、土地又は建物等の図面、写真、地図等"},
+  {type:"term", name:"要因資料",
+   desc:"価格形成要因に照応する資料。一般的要因に係る一般資料、地域要因に係る地域資料、個別的要因に係る個別資料に分けられる"},
+  {type:"term", name:"事例資料",
+   desc:"鑑定評価の手法の適用に必要な現実の取引価格・賃料等に関する資料。建設事例・取引事例・収益事例・賃貸借等の事例等"},
+]},
+
+{id:"shisan_chosei", sec:"soron8",
  title:"試算価格の調整における留意事項", ref:"総論第８章 第８節",
  items:[
   {type:"group", name:"Ⅰ．各試算価格の再吟味", items:[
@@ -633,7 +632,18 @@ const DATA = [
   ]},
 ]},
 
-{id:"chintai_jirei_ryuiten", sec:"tetsuzuki",
+{id:"sekisan_hiyou", sec:"soron7",
+ title:"積算法：賃料に含まれる必要諸経費等", ref:"総論第７章（積算法）Ⅱ-３",
+ items:[
+  "減価償却費（償却前の純収益に対応する期待利回りを用いる場合には計上しない）",
+  "維持管理費（維持費、管理費、修繕費等）",
+  "公租公課（固定資産税、都市計画税等）",
+  "損害保険料（火災、機械、ボイラー等の各種保険）",
+  "貸倒れ準備費",
+  "空室等による損失相当額",
+]},
+
+{id:"chintai_jirei_ryuiten", sec:"soron7",
  title:"賃貸事例比較法：契約内容の類似性判断に係る留意事項", ref:"総論第７章（賃貸事例比較法）留意事項(2)イ",
  items:[
   "賃貸形式",
@@ -645,19 +655,8 @@ const DATA = [
   "賃貸借等に供される範囲及びその使用方法",
 ]},
 
-{id:"sekisan_hiyou", sec:"tetsuzuki",
- title:"積算法：賃料に含まれる必要諸経費等", ref:"総論第７章（積算法）Ⅱ-３",
- items:[
-  "減価償却費（償却前の純収益に対応する期待利回りを用いる場合には計上しない）",
-  "維持管理費（維持費、管理費、修繕費等）",
-  "公租公課（固定資産税、都市計画税等）",
-  "損害保険料（火災、機械、ボイラー等の各種保険）",
-  "貸倒れ準備費",
-  "空室等による損失相当額",
-]},
-
 /* ── 証券化対象不動産（DCF法）────── */
-{id:"shoken_dcf_items", sec:"shoken",
+{id:"shoken_dcf_items", sec:"kakuron3",
  title:"DCF法 収益費用項目（証券化対象不動産）", ref:"各論第３章 第５節 Ⅱ",
  note:"連続する複数の期間ごとに以下の項目に区分して鑑定評価報告書に記載",
  items:[
