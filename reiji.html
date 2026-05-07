@@ -1024,25 +1024,30 @@ function showIndex(){
 
 /* ── スワイプで戻る ── */
 (function(){
-  let startX = 0, startY = 0, dragging = false;
-
-  // スワイプ中に表示するオーバーレイ（詳細画面を左にスライド）
+  let startX = 0, startY = 0, dragging = false, swipeReady = false;
   const detail = document.getElementById("detailView");
 
   document.addEventListener("touchstart", function(e){
+    swipeReady = false;
+    dragging = false;
+    // ヘッダー内のタップ（戻るボタン含む）はスワイプ対象外
+    if(e.target.closest(".header")) return;
+    // 詳細画面が表示されていない場合も対象外
+    if(detail.style.display === "none") return;
     const t = e.touches[0];
     startX = t.clientX;
     startY = t.clientY;
-    dragging = false;
+    // 左端30px以内から始まった場合のみスワイプ受付
+    if(startX < 30) swipeReady = true;
   }, {passive: true});
 
   document.addEventListener("touchmove", function(e){
-    if(document.getElementById("detailView").style.display === "none") return;
+    if(!swipeReady) return;
     const t = e.touches[0];
     const dx = t.clientX - startX;
     const dy = t.clientY - startY;
-    // 左端20px以内から開始 かつ 横方向の動きが縦より大きい場合のみ
-    if(!dragging && startX < 30 && Math.abs(dx) > Math.abs(dy) && dx > 0){
+    // 横移動が縦より大きく、かつ10px以上右に動いたらドラッグ開始
+    if(!dragging && dx > 10 && Math.abs(dx) > Math.abs(dy)){
       dragging = true;
     }
     if(dragging && dx > 0){
@@ -1052,8 +1057,9 @@ function showIndex(){
   }, {passive: true});
 
   document.addEventListener("touchend", function(e){
-    if(!dragging) return;
+    if(!dragging){ swipeReady = false; return; }
     dragging = false;
+    swipeReady = false;
     const dx = e.changedTouches[0].clientX - startX;
     if(dx > window.innerWidth * 0.35){
       // 35%以上スワイプで戻る
@@ -1065,7 +1071,7 @@ function showIndex(){
         showIndex();
       }, 250);
     } else {
-      // 戻らない場合は元の位置に戻す
+      // 足りなければ元の位置に戻す
       detail.style.transition = "transform .2s ease";
       detail.style.transform = "translateX(0)";
       setTimeout(function(){
