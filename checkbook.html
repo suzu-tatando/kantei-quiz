@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b2a3a">
+<title>基準・留意事項 暗記チェックブック</title>
+<style>
+:root{
+  --bg:#f4f1ea; --panel:#fffdf8; --ink:#1d2530; --sub:#6b7280; --line:#ddd6c8;
+  --accent:#2f5d8a; --accent2:#a8632c; --ok:#2f7a55; --warn:#b4762a;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 6px 18px rgba(30,40,60,.07);
+  --radius:14px;
+  --maxw:820px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#12161c; --panel:#1a2029; --ink:#e8e6e1; --sub:#98a2b3; --line:#2c3542;
+    --accent:#7fb0e0; --accent2:#e0a86a; --ok:#63c497; --warn:#e0b063;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Hiragino Mincho ProN","Yu Mincho",YuMincho,"Noto Serif JP",serif;
+  font-size:16px; line-height:1.9;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+button,input,select{font-family:inherit;color:inherit}
+
+/* ---------- header ---------- */
+header{
+  position:sticky; top:0; z-index:50;
+  background:color-mix(in srgb,var(--panel) 92%, transparent);
+  backdrop-filter:saturate(1.4) blur(10px);
+  border-bottom:1px solid var(--line);
+  padding-top:env(safe-area-inset-top);
+}
+.hd{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:52px}
+.hd h1{font-size:15px;margin:0;font-weight:600;letter-spacing:.02em;flex:1;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iconbtn{
+  border:1px solid var(--line);background:var(--panel);border-radius:10px;
+  padding:6px 11px;font-size:13px;cursor:pointer;white-space:nowrap;line-height:1.6;
+}
+.iconbtn:active{transform:scale(.96)}
+.iconbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.bar{height:3px;background:var(--line)}
+.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+
+main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 120px}
+
+/* ---------- generic ---------- */
+.muted{color:var(--sub);font-size:13px}
+.sans{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+.hidden{display:none !important}
+
+/* ---------- home ---------- */
+.hero{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 18px;box-shadow:var(--shadow);margin-bottom:14px;
+}
+.hero h2{margin:0 0 4px;font-size:19px}
+.stats{display:flex;gap:18px;margin-top:10px;flex-wrap:wrap}
+.stat b{font-size:22px;display:block;line-height:1.2;font-family:-apple-system,sans-serif}
+.stat span{font-size:11px;color:var(--sub);letter-spacing:.08em}
+.rowbtns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.pbtn{
+  flex:1;min-width:130px;border:none;border-radius:11px;padding:11px 14px;
+  background:var(--accent);color:#fff;font-size:14px;cursor:pointer;font-weight:600;
+}
+.pbtn.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.pbtn:active{opacity:.8}
+
+.chgroup{margin:22px 0 8px;font-size:12px;letter-spacing:.14em;color:var(--sub);
+  font-family:-apple-system,sans-serif;font-weight:700}
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;margin-bottom:10px;
+}
+.chrow{
+  display:flex;align-items:center;gap:12px;padding:13px 16px;cursor:pointer;
+  border-bottom:1px solid var(--line);
+}
+.chrow:last-child{border-bottom:none}
+.chrow:active{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.chrow .t{flex:1;font-size:15px}
+.chrow .n{font-size:11px;color:var(--sub);font-family:-apple-system,sans-serif}
+.ring{width:34px;height:34px;flex:none;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring i{position:absolute;inset:0;display:grid;place-items:center;font-size:10px;
+  font-style:normal;font-family:-apple-system,sans-serif;color:var(--sub)}
+
+/* ---------- list ---------- */
+.qrow{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start}
+.qrow:last-child{border-bottom:none}
+.qrow:active{background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.qid{font-family:-apple-system,sans-serif;font-size:11px;color:var(--sub);
+  border:1px solid var(--line);border-radius:6px;padding:1px 6px;flex:none;margin-top:4px;min-width:44px;text-align:center}
+.qt{flex:1;font-size:15px;line-height:1.65}
+.qmark{flex:none;font-size:15px;width:20px;text-align:center;margin-top:2px}
+.sechd{font-size:12px;letter-spacing:.1em;color:var(--sub);padding:14px 4px 6px;
+  font-family:-apple-system,sans-serif;font-weight:700}
+
+/* ---------- study card ---------- */
+.study{display:flex;flex-direction:column;gap:12px}
+.qbox{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px;box-shadow:var(--shadow);
+}
+.qbox .meta{font-size:11px;color:var(--sub);letter-spacing:.06em;margin-bottom:8px;
+  font-family:-apple-system,sans-serif}
+.qbox .qq{font-size:19px;font-weight:600;line-height:1.7;margin:0}
+.tap{
+  border:1px dashed var(--line);border-radius:var(--radius);padding:34px 18px;
+  text-align:center;color:var(--sub);cursor:pointer;background:transparent;width:100%;
+  font-size:14px;letter-spacing:.05em;
+}
+.tap:active{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.abox{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 18px 20px;box-shadow:var(--shadow);animation:fade .22s ease;
+}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.abox p{margin:0 0 .55em;text-indent:1em}
+.abox p:last-child{margin-bottom:0}
+.abox p.ni{text-indent:0}
+.abox p.n{text-indent:0;padding-left:2.1em;text-indent:-2.1em}
+.abox p.n2{text-indent:0;padding-left:3.4em}
+.abox p.lead{text-indent:1em}
+.abox .h{font-weight:600;text-indent:0;margin-top:.8em}
+
+/* underlines : 実線=基準 / 点線=留意事項 */
+u.s,u.d{
+  text-decoration-line:underline;
+  text-decoration-skip-ink:none;
+  text-underline-offset:.22em;
+  text-decoration-thickness:1.5px;
+}
+u.s{ text-decoration-style:solid; text-decoration-color:var(--accent); }
+u.d{ text-decoration-style:dotted; text-decoration-color:var(--accent2); text-decoration-thickness:2px; }
+body.nolines u.s,body.nolines u.d{text-decoration-line:none}
+
+.legend{display:flex;gap:16px;font-size:11px;color:var(--sub);
+  font-family:-apple-system,sans-serif;padding:2px 2px 0;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{display:inline-block;width:26px;height:0;border-top:2px solid var(--accent)}
+.legend i.dd{border-top:2px dashed var(--accent2)}
+
+/* footer nav */
+.footnav{
+  position:fixed;left:0;right:0;bottom:0;z-index:60;
+  background:color-mix(in srgb,var(--panel) 94%, transparent);
+  backdrop-filter:blur(10px);border-top:1px solid var(--line);
+  padding:8px 14px calc(8px + env(safe-area-inset-bottom));
+}
+.fn{max-width:var(--maxw);margin:0 auto;display:flex;gap:8px;align-items:center}
+.fn button{
+  border:1px solid var(--line);background:var(--panel);border-radius:11px;
+  padding:11px 0;font-size:14px;cursor:pointer;flex:1;font-weight:600;
+}
+.fn button:active{opacity:.75}
+.fn .know{border-color:var(--ok);color:var(--ok)}
+.fn .again{border-color:var(--warn);color:var(--warn)}
+.fn .nav{flex:0 0 54px;font-size:17px;font-weight:400}
+.fn button[disabled]{opacity:.35}
+
+/* search */
+.searchwrap{margin-bottom:12px}
+.searchwrap input{
+  width:100%;padding:11px 14px;border-radius:11px;border:1px solid var(--line);
+  background:var(--panel);font-size:15px;
+}
+.pill{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;
+  padding:3px 10px;margin:0 6px 6px 0;cursor:pointer;font-family:-apple-system,sans-serif}
+.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.empty{text-align:center;color:var(--sub);padding:50px 10px;font-size:14px}
+
+/* ===== タブレット（iPad）以上 ===== */
+@media (min-width:820px){
+  body{font-size:17px}
+  :root{--maxw:1180px}
+  main{padding:20px 22px 130px}
+  .hd{padding:12px 22px}
+  .hd h1{font-size:17px}
+  .hero h2{font-size:22px}
+  /* 章一覧を2列に */
+  #chapters .card{
+    display:grid;grid-template-columns:1fr 1fr;
+  }
+  #chapters .chrow{border-bottom:1px solid var(--line)}
+  #chapters .chrow:nth-child(odd){border-right:1px solid var(--line)}
+  .qbox .qq{font-size:22px}
+  .qid{min-width:52px}
+}
+/* ===== 分割ビュー（iPad横向き・PC） ===== */
+@media (min-width:980px){
+  body.split main{
+    display:grid;grid-template-columns:330px minmax(0,1fr);
+    gap:20px;align-items:start;
+  }
+  body.split #view-list{
+    position:sticky;top:78px;
+    max-height:calc(100vh - 190px);overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-right:2px;
+  }
+  body.split #view-list .qt{font-size:14px;line-height:1.55}
+  body.split #view-list .sechd{font-size:11px;padding:10px 4px 4px}
+  body.split #view-list .qrow{padding:9px 11px}
+  body.split #view-study{max-width:860px}
+  body.split .footnav .fn{max-width:860px;margin-right:auto;margin-left:auto}
+}
+.qrow.active{background:color-mix(in srgb,var(--accent) 13%,transparent)}
+.qrow.active .qt{font-weight:600}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd">
+    <button class="iconbtn sans" id="back" style="display:none">‹ 戻る</button>
+    <h1 id="title">基準・留意事項 暗記チェックブック</h1>
+    <button class="iconbtn sans" id="toggleLines" title="下線の表示切替">下線</button>
+  </div>
+  <div class="bar"><i id="bar"></i></div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section id="view-home">
+    <div class="hero">
+      <h2>不動産鑑定評価基準</h2>
+      <div class="muted sans">基準・留意事項 暗記チェックブック</div>
+      <div class="stats sans">
+        <div class="stat"><b id="s-total">0</b><span>問</span></div>
+        <div class="stat"><b id="s-known" style="color:var(--ok)">0</b><span>覚えた</span></div>
+        <div class="stat"><b id="s-again" style="color:var(--warn)">0</b><span>要復習</span></div>
+        <div class="stat"><b id="s-rate">0%</b><span>達成率</span></div>
+      </div>
+      <div class="rowbtns">
+        <button class="pbtn" id="go-all">続きから</button>
+        <button class="pbtn sec" id="go-weak">要復習のみ</button>
+        <button class="pbtn sec" id="go-shuffle">ランダム</button>
+      </div>
+      <div class="rowbtns"><button class="pbtn sec" id="reset" style="flex:0 0 auto;min-width:0;font-weight:400;font-size:12px;padding:7px 12px">学習記録をリセット</button></div>
+    </div>
+
+    <div class="searchwrap"><input id="q" type="search" placeholder="キーワード検索（例：最有効使用）"></div>
+    <div id="chapters"></div>
+  </section>
+
+  <!-- LIST -->
+  <section id="view-list" class="hidden"></section>
+
+  <!-- STUDY -->
+  <section id="view-study" class="hidden">
+    <div class="study">
+      <div class="qbox">
+        <div class="meta" id="st-meta"></div>
+        <p class="qq" id="st-q"></p>
+      </div>
+      <button class="tap" id="st-tap">タップして解答を表示</button>
+      <div id="st-a" class="hidden"></div>
+      <div class="legend hidden" id="st-legend">
+        <span><i></i>基準</span>
+        <span><i class="dd"></i>留意事項</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="footnav hidden" id="footnav">
+  <div class="fn">
+    <button class="nav" id="prev">‹</button>
+    <button class="again" id="again">△ 要復習</button>
+    <button class="know" id="know">○ 覚えた</button>
+    <button class="nav" id="next">›</button>
+  </div>
+</div>
+
+<script src="checkbook-data.js"></script>
+<script>
+(function(){
+"use strict";
+var DATA = window.CHECKBOOK_DATA || [];
+var LS = "kanteiCheckbook.v1";
+var state = { marks:{}, last:null, lines:true };
+try{ var raw=localStorage.getItem(LS); if(raw) state=Object.assign(state, JSON.parse(raw)); }catch(e){}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
+
+var $=function(s){return document.querySelector(s)};
+var deck=[], pos=0, listCtx=null;
+
+/* ---------- chapter grouping ---------- */
+function chapters(){
+  var out=[], map={};
+  DATA.forEach(function(c){
+    if(!map[c.ch]){ map[c.ch]={name:c.ch, part:c.part||"", items:[]}; out.push(map[c.ch]); }
+    map[c.ch].items.push(c);
+  });
+  return out;
+}
+function markOf(c){ return state.marks[c.id]||null; }
+
+function renderHome(){
+  var known=0, again=0;
+  DATA.forEach(function(c){ var m=markOf(c); if(m==="know")known++; else if(m==="again")again++; });
+  $("#s-total").textContent=DATA.length;
+  $("#s-known").textContent=known;
+  $("#s-again").textContent=again;
+  $("#s-rate").textContent=DATA.length?Math.round(known/DATA.length*100)+"%":"0%";
+  $("#bar").style.width=(DATA.length?known/DATA.length*100:0)+"%";
+
+  var html="", lastPart=null;
+  chapters().forEach(function(ch,i){
+    if(ch.part!==lastPart){ lastPart=ch.part; html+='<div class="chgroup">'+esc(ch.part)+'</div><div class="card">'+ (i? '' : ''); }
+    else if(i===0){ html+='<div class="card">'; }
+    var k=ch.items.filter(function(c){return markOf(c)==="know"}).length;
+    var pct=ch.items.length? k/ch.items.length : 0;
+    html+='<div class="chrow" data-ch="'+esc(ch.name)+'">'
+      + ring(pct)
+      + '<div class="t">'+esc(ch.name)+'<div class="n">'+ch.items.length+'問　'+k+'／'+ch.items.length+'</div></div>'
+      + '<div class="n">›</div></div>';
+  });
+  // close cards properly
+  html = html.replace(/<div class="card">(?=[\s\S]*?<div class="chgroup">)/g, function(m){return m;});
+  $("#chapters").innerHTML = fixCards(html);
+  [].forEach.call(document.querySelectorAll(".chrow"),function(el){
+    el.onclick=function(){ openList(el.getAttribute("data-ch")); };
+  });
+}
+function fixCards(h){
+  // insert </div> before each .chgroup after the first, and at end
+  var parts=h.split('<div class="chgroup">');
+  var out=parts[0];
+  for(var i=1;i<parts.length;i++){ out += (i>1?'</div>':'') + '<div class="chgroup">' + parts[i]; }
+  if(parts.length>1) out+='</div>';
+  return out;
+}
+function ring(p){
+  var r=14,c=2*Math.PI*r;
+  return '<div class="ring"><svg width="34" height="34"><circle cx="17" cy="17" r="'+r+'" fill="none" stroke="var(--line)" stroke-width="3"/>'
+    +'<circle cx="17" cy="17" r="'+r+'" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+(c*(1-p))+'"/></svg>'
+    +'<i>'+Math.round(p*100)+'</i></div>';
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]}); }
+
+/* ---------- list ---------- */
+function openList(chName, items, label){
+  listCtx = {ch:chName, items:items, label:label};
+  var arr = items || DATA.filter(function(c){return c.ch===chName});
+  var html='', lastSec=null;
+  html+='<div class="card">';
+  arr.forEach(function(c){
+    if(c.sec && c.sec!==lastSec){
+      lastSec=c.sec;
+      html+='</div><div class="sechd">'+esc(c.sec)+'</div><div class="card">';
+    }
+    var m=markOf(c);
+    html+='<div class="qrow" data-id="'+esc(c.id)+'">'
+      +'<div class="qid">'+esc(c.id)+'</div>'
+      +'<div class="qt">'+esc(c.title)+'</div>'
+      +'<div class="qmark">'+(m==="know"?'<span style="color:var(--ok)">○</span>':m==="again"?'<span style="color:var(--warn)">△</span>':'')+'</div></div>';
+  });
+  html+='</div>';
+  $("#view-list").innerHTML = html.replace('<div class="card"></div>','');
+  [].forEach.call(document.querySelectorAll("#view-list .qrow"),function(el){
+    el.onclick=function(){
+      var id=el.getAttribute("data-id");
+      deck=arr.slice(); pos=deck.findIndex(function(c){return c.id===id});
+      show("study"); renderCard();
+    };
+  });
+  $("#title").textContent = label || chName;
+  show("list");
+}
+
+/* ---------- study ---------- */
+function startDeck(arr,label){
+  if(!arr.length){ alert("該当する問題がありません。"); return; }
+  deck=arr; pos=0; listCtx=null;
+  $("#title").textContent=label;
+  show("study"); renderCard();
+}
+function renderCard(){
+  var c=deck[pos]; if(!c) return;
+  state.last=c.id; save();
+  $("#st-meta").textContent=c.id+"　"+c.ch+(c.sec?"　"+c.sec:"")+"　（"+(pos+1)+"／"+deck.length+"）";
+  $("#st-q").textContent=c.title;
+  $("#st-a").innerHTML=c.body;
+  $("#st-a").className="abox hidden";
+  $("#st-legend").className="legend hidden";
+  $("#st-tap").classList.remove("hidden");
+  $("#prev").disabled = pos===0;
+  $("#next").disabled = pos===deck.length-1;
+  paintMarks();
+  highlightRow(c.id);
+  window.scrollTo(0,0);
+}
+/* 分割ビューの一覧で現在の問題を強調＋スクロール追従 */
+function highlightRow(id){
+  var rows=document.querySelectorAll("#view-list .qrow"), hit=null;
+  [].forEach.call(rows,function(el){
+    var on = el.getAttribute("data-id")===id;
+    el.classList.toggle("active", on);
+    if(on) hit=el;
+  });
+  if(hit && document.body.classList.contains("split")){
+    var pane=$("#view-list"), t=hit.offsetTop-pane.offsetTop;
+    if(t<pane.scrollTop || t>pane.scrollTop+pane.clientHeight-60) pane.scrollTop=t-60;
+  }
+}
+/* 一覧側の○△バッジを更新 */
+function repaintRow(id){
+  var el=document.querySelector('#view-list .qrow[data-id="'+id+'"]');
+  if(!el) return;
+  var m=state.marks[id];
+  el.querySelector(".qmark").innerHTML =
+    m==="know"?'<span style="color:var(--ok)">○</span>':m==="again"?'<span style="color:var(--warn)">△</span>':'';
+}
+function reveal(){
+  $("#st-a").classList.remove("hidden");
+  $("#st-legend").classList.remove("hidden");
+  $("#st-tap").classList.add("hidden");
+}
+function paintMarks(){
+  var m=markOf(deck[pos]);
+  $("#know").style.background = m==="know" ? "color-mix(in srgb,var(--ok) 16%,transparent)" : "";
+  $("#again").style.background= m==="again"? "color-mix(in srgb,var(--warn) 16%,transparent)" : "";
+}
+function mark(v){
+  var c=deck[pos]; if(!c) return;
+  if(state.marks[c.id]===v) delete state.marks[c.id]; else state.marks[c.id]=v;
+  save(); paintMarks(); repaintRow(c.id);
+  if(state.marks[c.id] && pos<deck.length-1){ setTimeout(function(){ pos++; renderCard(); },160); }
+}
+function move(d){
+  var n=pos+d; if(n<0||n>=deck.length) return;
+  pos=n; renderCard();
+}
+
+/* ---------- views ---------- */
+var current="home";
+function show(v){
+  current=v;
+  $("#view-home").classList.toggle("hidden", v!=="home");
+  $("#view-study").classList.toggle("hidden", v!=="study");
+  $("#footnav").classList.toggle("hidden", v!=="study");
+  $("#back").style.display = v==="home" ? "none" : "";
+  if(v==="home"){ $("#title").textContent="基準・留意事項 暗記チェックブック"; renderHome(); }
+  applyLayout();
+}
+/* 画面幅が広く，一覧から入った問題であれば一覧と問題を左右に並べる */
+function applyLayout(){
+  var split = window.innerWidth>=980 && current==="study" && !!listCtx;
+  document.body.classList.toggle("split", split);
+  $("#view-list").classList.toggle("hidden", !(current==="list" || split));
+  if(split && deck[pos]) highlightRow(deck[pos].id);
+}
+window.addEventListener("resize", applyLayout);
+window.addEventListener("orientationchange", function(){ setTimeout(applyLayout,150); });
+$("#back").onclick=function(){
+  if(current==="study" && listCtx && !document.body.classList.contains("split")){
+    openList(listCtx.ch, listCtx.items, listCtx.label);
+  } else show("home");
+};
+
+/* ---------- events ---------- */
+$("#st-tap").onclick=reveal;
+/* 問題文をタップすると解答を隠す */
+$("#st-q").onclick=function(){
+  if($("#st-tap").classList.contains("hidden")){
+    $("#st-a").classList.add("hidden");
+    $("#st-legend").classList.add("hidden");
+    $("#st-tap").classList.remove("hidden");
+  }else reveal();
+};
+$("#know").onclick=function(){mark("know")};
+$("#again").onclick=function(){mark("again")};
+$("#prev").onclick=function(){move(-1)};
+$("#next").onclick=function(){move(1)};
+$("#go-all").onclick=function(){
+  var i=DATA.findIndex(function(c){return c.id===state.last});
+  startDeck(DATA.slice(), "全問");
+  if(i>0){ pos=i; renderCard(); }
+};
+$("#go-weak").onclick=function(){
+  startDeck(DATA.filter(function(c){return markOf(c)!=="know"}), "要復習・未着手");
+};
+$("#go-shuffle").onclick=function(){
+  var a=DATA.slice();
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+  startDeck(a,"ランダム");
+};
+$("#reset").onclick=function(){
+  if(confirm("学習記録（○／△）をすべて消去します。よろしいですか？")){ state.marks={}; save(); renderHome(); }
+};
+$("#toggleLines").onclick=function(){
+  state.lines=!state.lines; save(); applyLines();
+};
+function applyLines(){
+  document.body.classList.toggle("nolines", !state.lines);
+  $("#toggleLines").classList.toggle("on", state.lines);
+}
+$("#q").oninput=function(){
+  var v=this.value.trim();
+  if(!v){ renderHome(); $("#chapters").classList.remove("searchres"); return; }
+  var hits=DATA.filter(function(c){
+    return c.title.indexOf(v)>=0 || c.body.replace(/<[^>]+>/g,"").indexOf(v)>=0 || c.id.toLowerCase()===v.toLowerCase();
+  });
+  var html='<div class="sechd">検索結果 '+hits.length+'件</div><div class="card">';
+  hits.forEach(function(c){
+    html+='<div class="qrow" data-id="'+esc(c.id)+'"><div class="qid">'+esc(c.id)+'</div>'
+      +'<div class="qt">'+esc(c.title)+'<div class="n muted sans">'+esc(c.ch)+'</div></div></div>';
+  });
+  html+='</div>';
+  if(!hits.length) html='<div class="empty">該当なし</div>';
+  $("#chapters").innerHTML=html;
+  [].forEach.call(document.querySelectorAll("#chapters .qrow"),function(el){
+    el.onclick=function(){
+      var id=el.getAttribute("data-id");
+      deck=hits.slice(); pos=deck.findIndex(function(c){return c.id===id});
+      listCtx=null; $("#title").textContent="検索結果"; show("study"); renderCard();
+    };
+  });
+};
+
+/* keyboard */
+document.addEventListener("keydown",function(e){
+  if(current!=="study") return;
+  if(e.key===" "||e.key==="Enter"){ e.preventDefault(); if($("#st-tap").classList.contains("hidden")) move(1); else reveal(); }
+  if(e.key==="ArrowRight") move(1);
+  if(e.key==="ArrowLeft") move(-1);
+  if(e.key==="1") mark("again");
+  if(e.key==="2") mark("know");
+});
+
+/* swipe */
+(function(){
+  var x0=null,y0=null;
+  document.addEventListener("touchstart",function(e){
+    if(e.target.closest("header,.footnav")) { x0=null; return; }
+    x0=e.touches[0].clientX; y0=e.touches[0].clientY;
+  },{passive:true});
+  document.addEventListener("touchend",function(e){
+    if(x0===null) return;
+    var dx=e.changedTouches[0].clientX-x0, dy=e.changedTouches[0].clientY-y0;
+    x0=null;
+    if(Math.abs(dx)<60||Math.abs(dy)>50) return;
+    if(current==="study"){ dx<0?move(1):move(-1); }
+    else if(current==="list" && dx>0){ show("home"); }
+  },{passive:true});
+})();
+
+applyLines();
+show("home");
+if(!DATA.length){ $("#chapters").innerHTML='<div class="empty">データ（checkbook-data.js）が読み込めませんでした。</div>'; }
+})();
+</script>
+</body>
+</html>
