@@ -122,9 +122,11 @@ main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 130px}
   font-family:-apple-system,sans-serif;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .qbox .qq{font-size:19px;font-weight:600;line-height:1.7;margin:0;cursor:pointer}
 .tap{
-  border:1px dashed var(--line);border-radius:var(--radius);padding:34px 18px;
+  border:1px dashed var(--line);border-radius:var(--radius);padding:24px 18px;
   text-align:center;color:var(--sub);cursor:pointer;background:transparent;width:100%;
   font-size:14px;letter-spacing:.05em;
+  min-height:clamp(200px,44vh,460px);
+  display:flex;align-items:center;justify-content:center;
 }
 .tap:active{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .abox{
@@ -266,7 +268,41 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
         <button class="pbtn sec" id="go-all">続きから<small>Q1から順番に</small></button>
         <button class="pbtn sec" id="go-shuffle">ランダム<small>全問シャッフル</small></button>
       </div>
-      <div class="rowbtns"><button class="pbtn sec" id="reset" style="flex:0 0 auto;min-width:0;font-weight:400;font-size:12px;padding:7px 12px">正誤の記録をリセット</button></div>
+      <div class="rowbtns">
+        <button class="pbtn sec" id="open-sync" style="flex:0 0 auto;min-width:0;font-weight:400;font-size:12px;padding:7px 12px">端末間で記録を共有</button>
+        <button class="pbtn sec" id="reset" style="flex:0 0 auto;min-width:0;font-weight:400;font-size:12px;padding:7px 12px">正誤の記録をリセット</button>
+      </div>
+    </div>
+
+    <!-- 端末間の引き継ぎ -->
+    <div class="card hidden" id="syncpanel" style="padding:16px 18px">
+      <div class="sans" style="font-size:13px;color:var(--sub);line-height:1.7">
+        この端末の正誤記録を他の端末へ引き継ぎます。<br>
+        リンクを作って AirDrop やメモで送り、相手の端末の Safari で開いてください。
+      </div>
+      <div class="rowbtns">
+        <button class="pbtn" id="mk-link">共有リンクを作成</button>
+        <button class="pbtn sec" id="dl-file">ファイルに書き出す</button>
+        <label class="pbtn sec" for="up-file" style="text-align:center;cursor:pointer">ファイルから読み込む</label>
+        <input type="file" id="up-file" accept="application/json,.json" style="display:none">
+      </div>
+      <div id="linkbox" class="hidden" style="margin-top:12px">
+        <input id="linkout" readonly class="sans"
+          style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-size:12px">
+        <div class="rowbtns"><button class="pbtn" id="copylink">リンクをコピー</button></div>
+        <div class="muted sans" id="linkmsg" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <!-- 受け取り確認 -->
+    <div class="card hidden" id="importpanel" style="padding:16px 18px">
+      <div class="sans" style="font-weight:700;margin-bottom:4px">別の端末の記録が見つかりました</div>
+      <div class="muted sans" id="imp-info"></div>
+      <div class="rowbtns">
+        <button class="pbtn" id="imp-merge">結合する（推奨）</button>
+        <button class="pbtn sec" id="imp-replace">置き換える</button>
+        <button class="pbtn sec" id="imp-cancel">取り込まない</button>
+      </div>
     </div>
 
     <div class="searchwrap"><input id="q" type="search" placeholder="キーワード検索（例：最有効使用）"></div>
@@ -290,8 +326,8 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
         <span><i class="dd"></i>留意事項</span>
       </div>
       <div class="judge hidden" id="st-judge">
-        <button class="jx" data-ok="0">✕ 間違えた</button>
         <button class="jo" data-ok="1">○ 正解</button>
+        <button class="jx" data-ok="0">✕ 間違えた</button>
       </div>
     </div>
   </section>
@@ -320,8 +356,8 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
   </div>
   <div class="fn hidden" id="fn-post">
     <button class="nav" id="prev2">‹</button>
-    <button class="jx" data-ok="0">✕ 間違えた</button>
     <button class="jo" data-ok="1">○ 正解</button>
+    <button class="jx" data-ok="0">✕ 間違えた</button>
     <button class="nav" id="next2">›</button>
   </div>
 </div>
@@ -335,7 +371,7 @@ var LS = "kanteiCheckbook.v1";
 var KEEP = 5;      /* 保存する履歴の数 */
 var USE  = 3;      /* 苦手判定に使う直近の回数 */
 
-var state = { hist:{}, last:null, lines:true, ver:2 };
+var state = { hist:{}, n:{}, last:null, lines:true, ver:2 };
 try{
   var raw=localStorage.getItem(LS);
   if(raw){
@@ -352,6 +388,7 @@ try{
   }
 }catch(e){}
 if(!state.hist) state.hist={};
+if(!state.n) state.n={};
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
 
 var $=function(s){return document.querySelector(s)};
@@ -361,11 +398,19 @@ var roundLog={}, roundLabel="", roundBase=null;
 /* ---------- 履歴 ---------- */
 function histOf(id){ return state.hist[id] || []; }          /* 古い→新しい */
 function lastOf(id){ var h=histOf(id); return h.length? h[h.length-1] : null; }
+/* 通算の解答回数（端末間で「どちらが新しいか」を判断するために使う） */
+function attemptsOf(id){
+  if(state.n && typeof state.n[id]==="number") return state.n[id];
+  return histOf(id).length;
+}
 function record(id, ok){
+  var next = Math.min(255, attemptsOf(id)+1);   /* 先に通算回数を確定させる */
   var h = histOf(id).slice();
   h.push(ok?1:0);
   while(h.length>KEEP) h.shift();
-  state.hist[id]=h; save();
+  state.hist[id]=h;
+  state.n[id]=next;
+  save();
 }
 /* 0（完璧）〜6（直近ほど間違い多い）。未出題は 3.5 で中間に置く */
 function wrongScore(id){
@@ -604,6 +649,125 @@ function weakOrder(pool){
   });
 }
 
+/* ---------- 端末間の引き継ぎ ---------- */
+/* 1問 = 2バイト（通算回数 / 直近5回の正誤）。問題の並び順は固定なのでIDは持たない。 */
+function encodeRecords(){
+  var b=[], lastNonZero=-1;
+  DATA.forEach(function(c,i){
+    var h=histOf(c.id), bits=0;
+    for(var k=0;k<h.length;k++) if(h[k]) bits|=1<<k;
+    var b0=Math.min(255,attemptsOf(c.id));
+    var b1=(h.length<<5)|(bits&31);
+    b.push(b0,b1);
+    if(b0||b1) lastNonZero=i;
+  });
+  b.length=(lastNonZero+1)*2;                       /* 末尾の未出題ぶんは捨てる */
+  var s=""; for(var i=0;i<b.length;i++) s+=String.fromCharCode(b[i]);
+  return "1"+btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function decodeRecords(payload){
+  if(!payload || payload.charAt(0)!=="1") throw new Error("形式が違います");
+  var s=payload.slice(1).replace(/-/g,"+").replace(/_/g,"/");
+  while(s.length%4) s+="=";
+  var bin=atob(s), out={}, count=0;
+  for(var i=0;i+1<bin.length;i+=2){
+    var idx=i/2; if(idx>=DATA.length) break;
+    var b0=bin.charCodeAt(i), b1=bin.charCodeAt(i+1);
+    var len=(b1>>5)&7, bits=b1&31;
+    if(!b0 && !len) continue;
+    var h=[]; for(var k=0;k<len;k++) h.push((bits>>k)&1);
+    out[DATA[idx].id]={h:h, n:b0||len};
+    count++;
+  }
+  return {rec:out, count:count};
+}
+function applyRecords(inc, mode){
+  if(mode==="replace"){ state.hist={}; state.n={}; }
+  Object.keys(inc).forEach(function(id){
+    if(mode==="replace" || inc[id].n>=attemptsOf(id)){
+      state.hist[id]=inc[id].h; state.n[id]=inc[id].n;
+    }
+  });
+  save(); renderHome();
+}
+var pendingImport=null;
+function askImport(payload){
+  var d;
+  try{ d=decodeRecords(payload); }catch(e){ return false; }
+  if(!d.count) return false;
+  pendingImport=d.rec;
+  $("#imp-info").textContent=d.count+"問ぶんの記録があります。「結合」では，各問題について解答回数が多い方の記録を残します。";
+  $("#importpanel").classList.remove("hidden");
+  return true;
+}
+$("#imp-merge").onclick=function(){ if(pendingImport) applyRecords(pendingImport,"merge"); closeImport("記録を結合しました。"); };
+$("#imp-replace").onclick=function(){ if(pendingImport) applyRecords(pendingImport,"replace"); closeImport("記録を置き換えました。"); };
+$("#imp-cancel").onclick=function(){ closeImport(""); };
+function closeImport(msg){
+  pendingImport=null;
+  $("#importpanel").classList.add("hidden");
+  if(msg) alert(msg);
+}
+$("#open-sync").onclick=function(){ $("#syncpanel").classList.toggle("hidden"); };
+$("#mk-link").onclick=function(){
+  var url=location.origin+location.pathname+"#s="+encodeRecords();
+  $("#linkout").value=url;
+  $("#linkbox").classList.remove("hidden");
+  $("#linkmsg").textContent="";
+  $("#linkout").focus(); $("#linkout").setSelectionRange(0,url.length);
+};
+$("#copylink").onclick=function(){
+  var v=$("#linkout").value;
+  function done(){ $("#linkmsg").textContent="コピーしました。AirDropやメモで他の端末へ送ってください。"; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(v).then(done,function(){ fallback(); });
+  } else fallback();
+  function fallback(){
+    $("#linkout").focus(); $("#linkout").setSelectionRange(0,v.length);
+    try{ document.execCommand("copy"); done(); }
+    catch(e){ $("#linkmsg").textContent="コピーできませんでした。上の文字列を長押しして選択・コピーしてください。"; }
+  }
+};
+$("#dl-file").onclick=function(){
+  var blob=new Blob([JSON.stringify({app:"kanteiCheckbook",ver:2,hist:state.hist,n:state.n},null,0)],{type:"application/json"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="kantei-checkbook-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1000);
+};
+$("#up-file").onchange=function(){
+  var f=this.files && this.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{
+      var o=JSON.parse(r.result);
+      if(!o || !o.hist) throw new Error();
+      var inc={};
+      Object.keys(o.hist).forEach(function(id){
+        inc[id]={h:o.hist[id]||[], n:(o.n&&o.n[id])||(o.hist[id]||[]).length};
+      });
+      pendingImport=inc;
+      $("#imp-info").textContent=Object.keys(inc).length+"問ぶんの記録があります。「結合」では，各問題について解答回数が多い方の記録を残します。";
+      $("#importpanel").classList.remove("hidden");
+      window.scrollTo(0,0);
+    }catch(e){ alert("このファイルは読み込めませんでした。"); }
+  };
+  r.readAsText(f);
+  this.value="";
+};
+/* リンクで開かれた場合（既に開いている状態で開かれるとハッシュ変更だけになるので両方拾う） */
+function checkHash(){
+  var m=/^#s=(.+)$/.exec(location.hash||"");
+  if(!m) return;
+  var ok=askImport(decodeURIComponent(m[1]));
+  try{ history.replaceState(null,"",location.pathname); }catch(e){}
+  if(!ok){ alert("リンクの記録を読み取れませんでした。"); return; }
+  show("home");
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange", checkHash);
+
 /* ---------- イベント ---------- */
 $("#st-tap").onclick=reveal;
 $("#f-reveal").onclick=reveal;
@@ -626,7 +790,7 @@ $("#go-shuffle").onclick=function(){
   startDeck(a,"ランダム");
 };
 $("#reset").onclick=function(){
-  if(confirm("すべての正誤の記録を消去します。よろしいですか？")){ state.hist={}; save(); renderHome(); }
+  if(confirm("すべての正誤の記録を消去します。よろしいですか？")){ state.hist={}; state.n={}; save(); renderHome(); }
 };
 $("#toggleLines").onclick=function(){ state.lines=!state.lines; save(); applyLines(); };
 function applyLines(){
@@ -689,6 +853,7 @@ document.addEventListener("keydown",function(e){
 
 applyLines();
 show("home");
+checkHash();
 if(!DATA.length){ $("#chapters").innerHTML='<div class="empty">データ（checkbook-data.js）が読み込めませんでした。</div>'; }
 })();
 </script>
