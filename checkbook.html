@@ -8,7 +8,7 @@
 <style>
 :root{
   --bg:#f4f1ea; --panel:#fffdf8; --ink:#1d2530; --sub:#6b7280; --line:#ddd6c8;
-  --accent:#2f5d8a; --accent2:#a8632c; --ok:#2f7a55; --warn:#b4762a;
+  --accent:#2f5d8a; --accent2:#a8632c; --ok:#2f7a55; --ng:#b5443a; --warn:#b4762a;
   --shadow:0 1px 2px rgba(0,0,0,.05),0 6px 18px rgba(30,40,60,.07);
   --radius:14px;
   --maxw:820px;
@@ -16,7 +16,7 @@
 @media (prefers-color-scheme:dark){
   :root{
     --bg:#12161c; --panel:#1a2029; --ink:#e8e6e1; --sub:#98a2b3; --line:#2c3542;
-    --accent:#7fb0e0; --accent2:#e0a86a; --ok:#63c497; --warn:#e0b063;
+    --accent:#7fb0e0; --accent2:#e0a86a; --ok:#63c497; --ng:#e8837a; --warn:#e0b063;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 6px 18px rgba(0,0,0,.35);
   }
 }
@@ -49,9 +49,9 @@ header{
 .iconbtn:active{transform:scale(.96)}
 .iconbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .bar{height:3px;background:var(--line)}
-.bar>i{display:block;height:100%;background:var(--accent);width:0;transition:width .25s}
+.bar>i{display:block;height:100%;background:var(--ok);width:0;transition:width .25s}
 
-main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 120px}
+main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 130px}
 
 /* ---------- generic ---------- */
 .muted{color:var(--sub);font-size:13px}
@@ -74,6 +74,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 120px}
 }
 .pbtn.sec{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .pbtn:active{opacity:.8}
+.pbtn small{display:block;font-weight:400;font-size:11px;opacity:.75;margin-top:1px}
 
 .chgroup{margin:22px 0 8px;font-size:12px;letter-spacing:.14em;color:var(--sub);
   font-family:-apple-system,sans-serif;font-weight:700}
@@ -95,15 +96,21 @@ main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 120px}
   font-style:normal;font-family:-apple-system,sans-serif;color:var(--sub)}
 
 /* ---------- list ---------- */
-.qrow{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start}
+.qrow{display:flex;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer;align-items:flex-start}
 .qrow:last-child{border-bottom:none}
 .qrow:active{background:color-mix(in srgb,var(--accent) 8%,transparent)}
 .qid{font-family:-apple-system,sans-serif;font-size:11px;color:var(--sub);
   border:1px solid var(--line);border-radius:6px;padding:1px 6px;flex:none;margin-top:4px;min-width:44px;text-align:center}
 .qt{flex:1;font-size:15px;line-height:1.65}
-.qmark{flex:none;font-size:15px;width:20px;text-align:center;margin-top:2px}
+.qmark{flex:none;margin-top:5px}
 .sechd{font-size:12px;letter-spacing:.1em;color:var(--sub);padding:14px 4px 6px;
   font-family:-apple-system,sans-serif;font-weight:700}
+
+/* 直近の正誤ドット */
+.dots{display:inline-flex;gap:3px;vertical-align:middle}
+.dots i{width:8px;height:8px;border-radius:50%;display:block;background:var(--line)}
+.dots i.o{background:var(--ok)}
+.dots i.x{background:var(--ng)}
 
 /* ---------- study card ---------- */
 .study{display:flex;flex-direction:column;gap:12px}
@@ -112,8 +119,8 @@ main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 120px}
   padding:18px;box-shadow:var(--shadow);
 }
 .qbox .meta{font-size:11px;color:var(--sub);letter-spacing:.06em;margin-bottom:8px;
-  font-family:-apple-system,sans-serif}
-.qbox .qq{font-size:19px;font-weight:600;line-height:1.7;margin:0}
+  font-family:-apple-system,sans-serif;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qbox .qq{font-size:19px;font-weight:600;line-height:1.7;margin:0;cursor:pointer}
 .tap{
   border:1px dashed var(--line);border-radius:var(--radius);padding:34px 18px;
   text-align:center;color:var(--sub);cursor:pointer;background:transparent;width:100%;
@@ -122,7 +129,7 @@ main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 120px}
 .tap:active{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .abox{
   background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  padding:18px 18px 20px;box-shadow:var(--shadow);animation:fade .22s ease;
+  padding:18px 18px 20px;box-shadow:var(--shadow);animation:fade .18s ease;
 }
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 .abox p{margin:0 0 .55em;text-indent:1em}
@@ -130,8 +137,18 @@ main{max-width:var(--maxw);margin:0 auto;padding:14px 14px 120px}
 .abox p.ni{text-indent:0}
 .abox p.n{text-indent:0;padding-left:2.1em;text-indent:-2.1em}
 .abox p.n2{text-indent:0;padding-left:3.4em}
-.abox p.lead{text-indent:1em}
 .abox .h{font-weight:600;text-indent:0;margin-top:.8em}
+
+/* 解答直下の○×（スクロール後でも押せるよう下部バーにも同じものを置く） */
+.judge{display:flex;gap:10px}
+.judge button{
+  flex:1;border-radius:12px;padding:14px 0;font-size:16px;font-weight:600;cursor:pointer;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  border:1.5px solid var(--line);background:var(--panel);
+}
+.judge .jo{border-color:var(--ok);color:var(--ok)}
+.judge .jx{border-color:var(--ng);color:var(--ng)}
+.judge button:active{transform:scale(.97)}
 
 /* underlines : 実線=基準 / 点線=留意事項 */
 u.s,u.d{
@@ -150,7 +167,15 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
 .legend i{display:inline-block;width:26px;height:0;border-top:2px solid var(--accent)}
 .legend i.dd{border-top:2px dashed var(--accent2)}
 
-/* footer nav */
+/* ---------- result ---------- */
+.result{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:24px 20px;box-shadow:var(--shadow);text-align:center}
+.result h2{margin:0 0 6px;font-size:20px}
+.result .big{font-size:40px;font-weight:700;line-height:1.2;
+  font-family:-apple-system,sans-serif;margin:10px 0 2px}
+.result .rowbtns{margin-top:18px}
+
+/* ---------- footer nav ---------- */
 .footnav{
   position:fixed;left:0;right:0;bottom:0;z-index:60;
   background:color-mix(in srgb,var(--panel) 94%, transparent);
@@ -160,12 +185,14 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
 .fn{max-width:var(--maxw);margin:0 auto;display:flex;gap:8px;align-items:center}
 .fn button{
   border:1px solid var(--line);background:var(--panel);border-radius:11px;
-  padding:11px 0;font-size:14px;cursor:pointer;flex:1;font-weight:600;
+  padding:12px 0;font-size:15px;cursor:pointer;flex:1;font-weight:600;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
 }
 .fn button:active{opacity:.75}
-.fn .know{border-color:var(--ok);color:var(--ok)}
-.fn .again{border-color:var(--warn);color:var(--warn)}
 .fn .nav{flex:0 0 54px;font-size:17px;font-weight:400}
+.fn .reveal{background:var(--accent);border-color:var(--accent);color:#fff}
+.fn .jo{border-color:var(--ok);color:var(--ok);border-width:1.5px}
+.fn .jx{border-color:var(--ng);color:var(--ng);border-width:1.5px}
 .fn button[disabled]{opacity:.35}
 
 /* search */
@@ -174,9 +201,6 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
   width:100%;padding:11px 14px;border-radius:11px;border:1px solid var(--line);
   background:var(--panel);font-size:15px;
 }
-.pill{display:inline-block;font-size:11px;border:1px solid var(--line);border-radius:999px;
-  padding:3px 10px;margin:0 6px 6px 0;cursor:pointer;font-family:-apple-system,sans-serif}
-.pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .empty{text-align:center;color:var(--sub);padding:50px 10px;font-size:14px}
 
 /* ===== タブレット（iPad）以上 ===== */
@@ -187,10 +211,7 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
   .hd{padding:12px 22px}
   .hd h1{font-size:17px}
   .hero h2{font-size:22px}
-  /* 章一覧を2列に */
-  #chapters .card{
-    display:grid;grid-template-columns:1fr 1fr;
-  }
+  #chapters .card{display:grid;grid-template-columns:1fr 1fr}
   #chapters .chrow{border-bottom:1px solid var(--line)}
   #chapters .chrow:nth-child(odd){border-right:1px solid var(--line)}
   .qbox .qq{font-size:22px}
@@ -205,13 +226,12 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
   body.split #view-list{
     position:sticky;top:78px;
     max-height:calc(100vh - 190px);overflow-y:auto;
-    -webkit-overflow-scrolling:touch;
-    padding-right:2px;
+    -webkit-overflow-scrolling:touch;padding-right:2px;
   }
   body.split #view-list .qt{font-size:14px;line-height:1.55}
   body.split #view-list .sechd{font-size:11px;padding:10px 4px 4px}
   body.split #view-list .qrow{padding:9px 11px}
-  body.split #view-study{max-width:860px}
+  body.split #view-study,body.split #view-result{max-width:860px}
   body.split .footnav .fn{max-width:860px;margin-right:auto;margin-left:auto}
 }
 .qrow.active{background:color-mix(in srgb,var(--accent) 13%,transparent)}
@@ -236,17 +256,17 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
       <h2>不動産鑑定評価基準</h2>
       <div class="muted sans">基準・留意事項 暗記チェックブック</div>
       <div class="stats sans">
-        <div class="stat"><b id="s-total">0</b><span>問</span></div>
-        <div class="stat"><b id="s-known" style="color:var(--ok)">0</b><span>覚えた</span></div>
-        <div class="stat"><b id="s-again" style="color:var(--warn)">0</b><span>要復習</span></div>
-        <div class="stat"><b id="s-rate">0%</b><span>達成率</span></div>
+        <div class="stat"><b id="s-total">0</b><span>全問</span></div>
+        <div class="stat"><b id="s-done">0</b><span>出題済</span></div>
+        <div class="stat"><b id="s-weak" style="color:var(--ng)">0</b><span>苦手</span></div>
+        <div class="stat"><b id="s-rate" style="color:var(--ok)">0%</b><span>直近正答率</span></div>
       </div>
       <div class="rowbtns">
-        <button class="pbtn" id="go-all">続きから</button>
-        <button class="pbtn sec" id="go-weak">要復習のみ</button>
-        <button class="pbtn sec" id="go-shuffle">ランダム</button>
+        <button class="pbtn" id="go-weak">苦手順で演習<small>間違いが多い順・未出題を優先</small></button>
+        <button class="pbtn sec" id="go-all">続きから<small>Q1から順番に</small></button>
+        <button class="pbtn sec" id="go-shuffle">ランダム<small>全問シャッフル</small></button>
       </div>
-      <div class="rowbtns"><button class="pbtn sec" id="reset" style="flex:0 0 auto;min-width:0;font-weight:400;font-size:12px;padding:7px 12px">学習記録をリセット</button></div>
+      <div class="rowbtns"><button class="pbtn sec" id="reset" style="flex:0 0 auto;min-width:0;font-weight:400;font-size:12px;padding:7px 12px">正誤の記録をリセット</button></div>
     </div>
 
     <div class="searchwrap"><input id="q" type="search" placeholder="キーワード検索（例：最有効使用）"></div>
@@ -260,7 +280,7 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
   <section id="view-study" class="hidden">
     <div class="study">
       <div class="qbox">
-        <div class="meta" id="st-meta"></div>
+        <div class="meta"><span id="st-meta"></span><span class="dots" id="st-dots"></span></div>
         <p class="qq" id="st-q"></p>
       </div>
       <button class="tap" id="st-tap">タップして解答を表示</button>
@@ -269,16 +289,40 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
         <span><i></i>基準</span>
         <span><i class="dd"></i>留意事項</span>
       </div>
+      <div class="judge hidden" id="st-judge">
+        <button class="jx" data-ok="0">✕ 間違えた</button>
+        <button class="jo" data-ok="1">○ 正解</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="view-result" class="hidden">
+    <div class="result">
+      <h2 id="rs-title">おつかれさまでした</h2>
+      <div class="muted sans" id="rs-sub"></div>
+      <div class="big" id="rs-score">0%</div>
+      <div class="muted sans" id="rs-detail"></div>
+      <div class="rowbtns">
+        <button class="pbtn" id="rs-again">間違えた問題をもう一周</button>
+        <button class="pbtn sec" id="rs-repeat">同じ範囲をもう一周</button>
+        <button class="pbtn sec" id="rs-home">ホームへ</button>
+      </div>
     </div>
   </section>
 </main>
 
 <div class="footnav hidden" id="footnav">
-  <div class="fn">
+  <div class="fn" id="fn-pre">
     <button class="nav" id="prev">‹</button>
-    <button class="again" id="again">△ 要復習</button>
-    <button class="know" id="know">○ 覚えた</button>
+    <button class="reveal" id="f-reveal">解答を表示</button>
     <button class="nav" id="next">›</button>
+  </div>
+  <div class="fn hidden" id="fn-post">
+    <button class="nav" id="prev2">‹</button>
+    <button class="jx" data-ok="0">✕ 間違えた</button>
+    <button class="jo" data-ok="1">○ 正解</button>
+    <button class="nav" id="next2">›</button>
   </div>
 </div>
 
@@ -288,14 +332,62 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
 "use strict";
 var DATA = window.CHECKBOOK_DATA || [];
 var LS = "kanteiCheckbook.v1";
-var state = { marks:{}, last:null, lines:true };
-try{ var raw=localStorage.getItem(LS); if(raw) state=Object.assign(state, JSON.parse(raw)); }catch(e){}
+var KEEP = 5;      /* 保存する履歴の数 */
+var USE  = 3;      /* 苦手判定に使う直近の回数 */
+
+var state = { hist:{}, last:null, lines:true, ver:2 };
+try{
+  var raw=localStorage.getItem(LS);
+  if(raw){
+    var old=JSON.parse(raw);
+    state = Object.assign(state, old);
+    /* 旧バージョン（○覚えた／△要復習）からの移行 */
+    if(!old.ver && old.marks){
+      state.hist = state.hist || {};
+      Object.keys(old.marks).forEach(function(id){
+        if(!state.hist[id]) state.hist[id] = [ old.marks[id]==="know" ? 1 : 0 ];
+      });
+      state.ver = 2;
+    }
+  }
+}catch(e){}
+if(!state.hist) state.hist={};
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
 
 var $=function(s){return document.querySelector(s)};
-var deck=[], pos=0, listCtx=null;
+var deck=[], pos=0, listCtx=null, current="home";
+var roundLog={}, roundLabel="", roundBase=null;
 
-/* ---------- chapter grouping ---------- */
+/* ---------- 履歴 ---------- */
+function histOf(id){ return state.hist[id] || []; }          /* 古い→新しい */
+function lastOf(id){ var h=histOf(id); return h.length? h[h.length-1] : null; }
+function record(id, ok){
+  var h = histOf(id).slice();
+  h.push(ok?1:0);
+  while(h.length>KEEP) h.shift();
+  state.hist[id]=h; save();
+}
+/* 0（完璧）〜6（直近ほど間違い多い）。未出題は 3.5 で中間に置く */
+function wrongScore(id){
+  var h=histOf(id);
+  if(!h.length) return 3.5;
+  var w=[3,2,1], s=0, t=0;
+  for(var i=0;i<USE;i++){
+    var v=h[h.length-1-i];
+    if(v===undefined) break;
+    t+=w[i]; if(v===0) s+=w[i];
+  }
+  return t ? s/t*6 : 3.5;
+}
+function isWeak(id){ var h=histOf(id); if(!h.length) return false;
+  return h.slice(-USE).indexOf(0)>=0; }
+function dotsHtml(id,max){
+  var h=histOf(id).slice(-(max||USE)), out='';
+  for(var i=0;i<h.length;i++) out+='<i class="'+(h[i]?'o':'x')+'"></i>';
+  return out;
+}
+
+/* ---------- 章 ---------- */
 function chapters(){
   var out=[], map={};
   DATA.forEach(function(c){
@@ -304,41 +396,45 @@ function chapters(){
   });
   return out;
 }
-function markOf(c){ return state.marks[c.id]||null; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]}); }
 
 function renderHome(){
-  var known=0, again=0;
-  DATA.forEach(function(c){ var m=markOf(c); if(m==="know")known++; else if(m==="again")again++; });
+  var done=0, weak=0, okNow=0;
+  DATA.forEach(function(c){
+    var l=lastOf(c.id);
+    if(l!==null){ done++; if(l===1) okNow++; }
+    if(isWeak(c.id)) weak++;
+  });
   $("#s-total").textContent=DATA.length;
-  $("#s-known").textContent=known;
-  $("#s-again").textContent=again;
-  $("#s-rate").textContent=DATA.length?Math.round(known/DATA.length*100)+"%":"0%";
-  $("#bar").style.width=(DATA.length?known/DATA.length*100:0)+"%";
+  $("#s-done").textContent=done;
+  $("#s-weak").textContent=weak;
+  $("#s-rate").textContent = done? Math.round(okNow/done*100)+"%" : "—";
+  $("#bar").style.width=(DATA.length?okNow/DATA.length*100:0)+"%";
 
   var html="", lastPart=null;
-  chapters().forEach(function(ch,i){
-    if(ch.part!==lastPart){ lastPart=ch.part; html+='<div class="chgroup">'+esc(ch.part)+'</div><div class="card">'+ (i? '' : ''); }
-    else if(i===0){ html+='<div class="card">'; }
-    var k=ch.items.filter(function(c){return markOf(c)==="know"}).length;
-    var pct=ch.items.length? k/ch.items.length : 0;
+  chapters().forEach(function(ch){
+    if(ch.part!==lastPart){ lastPart=ch.part; html+='<div class="chgroup">'+esc(ch.part)+'</div>'; }
+    var ok=ch.items.filter(function(c){return lastOf(c.id)===1}).length;
+    var w=ch.items.filter(function(c){return isWeak(c.id)}).length;
+    var pct=ch.items.length? ok/ch.items.length : 0;
     html+='<div class="chrow" data-ch="'+esc(ch.name)+'">'
       + ring(pct)
-      + '<div class="t">'+esc(ch.name)+'<div class="n">'+ch.items.length+'問　'+k+'／'+ch.items.length+'</div></div>'
+      + '<div class="t">'+esc(ch.name)
+      + '<div class="n">'+ch.items.length+'問　○'+ok+(w?'　<span style="color:var(--ng)">苦手'+w+'</span>':'')+'</div></div>'
       + '<div class="n">›</div></div>';
   });
-  // close cards properly
-  html = html.replace(/<div class="card">(?=[\s\S]*?<div class="chgroup">)/g, function(m){return m;});
-  $("#chapters").innerHTML = fixCards(html);
+  $("#chapters").innerHTML = groupCards(html);
   [].forEach.call(document.querySelectorAll(".chrow"),function(el){
     el.onclick=function(){ openList(el.getAttribute("data-ch")); };
   });
 }
-function fixCards(h){
-  // insert </div> before each .chgroup after the first, and at end
-  var parts=h.split('<div class="chgroup">');
-  var out=parts[0];
-  for(var i=1;i<parts.length;i++){ out += (i>1?'</div>':'') + '<div class="chgroup">' + parts[i]; }
-  if(parts.length>1) out+='</div>';
+/* .chgroup ごとに .card で包む */
+function groupCards(h){
+  var parts=h.split('<div class="chgroup">'), out=parts[0];
+  for(var i=1;i<parts.length;i++){
+    var seg=parts[i], cut=seg.indexOf('</div>')+6;
+    out += '<div class="chgroup">'+seg.slice(0,cut)+'<div class="card">'+seg.slice(cut)+'</div>';
+  }
   return out;
 }
 function ring(p){
@@ -347,24 +443,21 @@ function ring(p){
     +'<circle cx="17" cy="17" r="'+r+'" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+(c*(1-p))+'"/></svg>'
     +'<i>'+Math.round(p*100)+'</i></div>';
 }
-function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(m){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]}); }
 
-/* ---------- list ---------- */
+/* ---------- 一覧 ---------- */
 function openList(chName, items, label){
   listCtx = {ch:chName, items:items, label:label};
   var arr = items || DATA.filter(function(c){return c.ch===chName});
-  var html='', lastSec=null;
-  html+='<div class="card">';
+  var html='<div class="card">', lastSec=null;
   arr.forEach(function(c){
     if(c.sec && c.sec!==lastSec){
       lastSec=c.sec;
       html+='</div><div class="sechd">'+esc(c.sec)+'</div><div class="card">';
     }
-    var m=markOf(c);
     html+='<div class="qrow" data-id="'+esc(c.id)+'">'
       +'<div class="qid">'+esc(c.id)+'</div>'
       +'<div class="qt">'+esc(c.title)+'</div>'
-      +'<div class="qmark">'+(m==="know"?'<span style="color:var(--ok)">○</span>':m==="again"?'<span style="color:var(--warn)">△</span>':'')+'</div></div>';
+      +'<div class="qmark"><span class="dots">'+dotsHtml(c.id)+'</span></div></div>';
   });
   html+='</div>';
   $("#view-list").innerHTML = html.replace('<div class="card"></div>','');
@@ -372,6 +465,7 @@ function openList(chName, items, label){
     el.onclick=function(){
       var id=el.getAttribute("data-id");
       deck=arr.slice(); pos=deck.findIndex(function(c){return c.id===id});
+      roundLog={}; roundLabel=label||chName; roundBase=arr.slice();
       show("study"); renderCard();
     };
   });
@@ -379,29 +473,82 @@ function openList(chName, items, label){
   show("list");
 }
 
-/* ---------- study ---------- */
+/* ---------- 演習 ---------- */
 function startDeck(arr,label){
   if(!arr.length){ alert("該当する問題がありません。"); return; }
-  deck=arr; pos=0; listCtx=null;
+  deck=arr.slice(); pos=0; listCtx=null;
+  roundLog={}; roundLabel=label; roundBase=arr.slice();
   $("#title").textContent=label;
   show("study"); renderCard();
 }
 function renderCard(){
   var c=deck[pos]; if(!c) return;
   state.last=c.id; save();
-  $("#st-meta").textContent=c.id+"　"+c.ch+(c.sec?"　"+c.sec:"")+"　（"+(pos+1)+"／"+deck.length+"）";
+  $("#st-meta").textContent=c.id+"　"+c.ch+"　（"+(pos+1)+"／"+deck.length+"）";
+  $("#st-dots").innerHTML=dotsHtml(c.id);
   $("#st-q").textContent=c.title;
   $("#st-a").innerHTML=c.body;
-  $("#st-a").className="abox hidden";
-  $("#st-legend").className="legend hidden";
-  $("#st-tap").classList.remove("hidden");
-  $("#prev").disabled = pos===0;
-  $("#next").disabled = pos===deck.length-1;
-  paintMarks();
+  hideAnswer();
+  $("#prev").disabled=$("#prev2").disabled = pos===0;
+  $("#next").disabled=$("#next2").disabled = pos===deck.length-1;
   highlightRow(c.id);
   window.scrollTo(0,0);
 }
-/* 分割ビューの一覧で現在の問題を強調＋スクロール追従 */
+function reveal(){
+  $("#st-a").classList.remove("hidden");
+  $("#st-legend").classList.remove("hidden");
+  $("#st-judge").classList.remove("hidden");
+  $("#st-tap").classList.add("hidden");
+  $("#fn-pre").classList.add("hidden");
+  $("#fn-post").classList.remove("hidden");
+}
+function hideAnswer(){
+  $("#st-a").className="abox hidden";
+  $("#st-legend").className="legend hidden";
+  $("#st-judge").className="judge hidden";
+  $("#st-tap").classList.remove("hidden");
+  $("#fn-pre").classList.remove("hidden");
+  $("#fn-post").classList.add("hidden");
+}
+function revealed(){ return $("#st-tap").classList.contains("hidden"); }
+
+/* ○×を記録して即次の問題へ */
+function judge(ok){
+  var c=deck[pos]; if(!c) return;
+  record(c.id, ok);
+  roundLog[c.id]=ok?1:0;
+  repaintRow(c.id);
+  if(pos < deck.length-1){ pos++; renderCard(); }
+  else showResult();
+}
+
+function move(d){
+  var n=pos+d; if(n<0||n>=deck.length) return;
+  pos=n; renderCard();
+}
+
+/* ---------- 結果 ---------- */
+function showResult(){
+  var ids=Object.keys(roundLog), ok=0;
+  ids.forEach(function(id){ if(roundLog[id]===1) ok++; });
+  var wrong=ids.filter(function(id){return roundLog[id]===0});
+  $("#rs-sub").textContent=roundLabel+"　"+ids.length+"問";
+  $("#rs-score").textContent = ids.length? Math.round(ok/ids.length*100)+"%" : "—";
+  $("#rs-detail").textContent = "○ "+ok+"問　✕ "+wrong.length+"問";
+  $("#rs-again").textContent = "間違えた"+wrong.length+"問をもう一周";
+  $("#rs-again").classList.toggle("hidden", wrong.length===0);
+  $("#rs-title").textContent = wrong.length===0 ? "全問正解！" : "おつかれさまでした";
+  show("result");
+}
+$("#rs-again").onclick=function(){
+  var wrong=Object.keys(roundLog).filter(function(id){return roundLog[id]===0});
+  var set={}; wrong.forEach(function(id){set[id]=1});
+  startDeck(DATA.filter(function(c){return set[c.id]}), roundLabel+"（間違えた問題）");
+};
+$("#rs-repeat").onclick=function(){ if(roundBase) startDeck(roundBase, roundLabel); };
+$("#rs-home").onclick=function(){ show("home"); };
+
+/* ---------- 一覧との連動 ---------- */
 function highlightRow(id){
   var rows=document.querySelectorAll("#view-list .qrow"), hit=null;
   [].forEach.call(rows,function(el){
@@ -414,47 +561,23 @@ function highlightRow(id){
     if(t<pane.scrollTop || t>pane.scrollTop+pane.clientHeight-60) pane.scrollTop=t-60;
   }
 }
-/* 一覧側の○△バッジを更新 */
 function repaintRow(id){
   var el=document.querySelector('#view-list .qrow[data-id="'+id+'"]');
-  if(!el) return;
-  var m=state.marks[id];
-  el.querySelector(".qmark").innerHTML =
-    m==="know"?'<span style="color:var(--ok)">○</span>':m==="again"?'<span style="color:var(--warn)">△</span>':'';
-}
-function reveal(){
-  $("#st-a").classList.remove("hidden");
-  $("#st-legend").classList.remove("hidden");
-  $("#st-tap").classList.add("hidden");
-}
-function paintMarks(){
-  var m=markOf(deck[pos]);
-  $("#know").style.background = m==="know" ? "color-mix(in srgb,var(--ok) 16%,transparent)" : "";
-  $("#again").style.background= m==="again"? "color-mix(in srgb,var(--warn) 16%,transparent)" : "";
-}
-function mark(v){
-  var c=deck[pos]; if(!c) return;
-  if(state.marks[c.id]===v) delete state.marks[c.id]; else state.marks[c.id]=v;
-  save(); paintMarks(); repaintRow(c.id);
-  if(state.marks[c.id] && pos<deck.length-1){ setTimeout(function(){ pos++; renderCard(); },160); }
-}
-function move(d){
-  var n=pos+d; if(n<0||n>=deck.length) return;
-  pos=n; renderCard();
+  if(el) el.querySelector(".dots").innerHTML=dotsHtml(id);
 }
 
-/* ---------- views ---------- */
-var current="home";
+/* ---------- 画面切替 ---------- */
 function show(v){
   current=v;
   $("#view-home").classList.toggle("hidden", v!=="home");
   $("#view-study").classList.toggle("hidden", v!=="study");
+  $("#view-result").classList.toggle("hidden", v!=="result");
   $("#footnav").classList.toggle("hidden", v!=="study");
   $("#back").style.display = v==="home" ? "none" : "";
   if(v==="home"){ $("#title").textContent="基準・留意事項 暗記チェックブック"; renderHome(); }
+  if(v==="result"){ $("#title").textContent="結果"; window.scrollTo(0,0); }
   applyLayout();
 }
-/* 画面幅が広く，一覧から入った問題であれば一覧と問題を左右に並べる */
 function applyLayout(){
   var split = window.innerWidth>=980 && current==="study" && !!listCtx;
   document.body.classList.toggle("split", split);
@@ -469,27 +592,33 @@ $("#back").onclick=function(){
   } else show("home");
 };
 
-/* ---------- events ---------- */
+/* ---------- 出題順 ---------- */
+function weakOrder(pool){
+  var idx={}; DATA.forEach(function(c,i){idx[c.id]=i});
+  return pool.slice().sort(function(a,b){
+    var d=wrongScore(b.id)-wrongScore(a.id);
+    if(d) return d;
+    var na=histOf(a.id).length, nb=histOf(b.id).length;
+    if(na!==nb) return na-nb;              /* 演習回数が少ない方を先に */
+    return idx[a.id]-idx[b.id];
+  });
+}
+
+/* ---------- イベント ---------- */
 $("#st-tap").onclick=reveal;
-/* 問題文をタップすると解答を隠す */
-$("#st-q").onclick=function(){
-  if($("#st-tap").classList.contains("hidden")){
-    $("#st-a").classList.add("hidden");
-    $("#st-legend").classList.add("hidden");
-    $("#st-tap").classList.remove("hidden");
-  }else reveal();
-};
-$("#know").onclick=function(){mark("know")};
-$("#again").onclick=function(){mark("again")};
-$("#prev").onclick=function(){move(-1)};
-$("#next").onclick=function(){move(1)};
+$("#f-reveal").onclick=reveal;
+$("#st-q").onclick=function(){ revealed()? hideAnswer() : reveal(); };
+[].forEach.call(document.querySelectorAll('[data-ok]'),function(b){
+  b.onclick=function(){ judge(b.getAttribute("data-ok")==="1"); };
+});
+$("#prev").onclick=$("#prev2").onclick=function(){move(-1)};
+$("#next").onclick=$("#next2").onclick=function(){move(1)};
+
+$("#go-weak").onclick=function(){ startDeck(weakOrder(DATA), "苦手順"); };
 $("#go-all").onclick=function(){
+  startDeck(DATA, "全問");
   var i=DATA.findIndex(function(c){return c.id===state.last});
-  startDeck(DATA.slice(), "全問");
   if(i>0){ pos=i; renderCard(); }
-};
-$("#go-weak").onclick=function(){
-  startDeck(DATA.filter(function(c){return markOf(c)!=="know"}), "要復習・未着手");
 };
 $("#go-shuffle").onclick=function(){
   var a=DATA.slice();
@@ -497,25 +626,24 @@ $("#go-shuffle").onclick=function(){
   startDeck(a,"ランダム");
 };
 $("#reset").onclick=function(){
-  if(confirm("学習記録（○／△）をすべて消去します。よろしいですか？")){ state.marks={}; save(); renderHome(); }
+  if(confirm("すべての正誤の記録を消去します。よろしいですか？")){ state.hist={}; save(); renderHome(); }
 };
-$("#toggleLines").onclick=function(){
-  state.lines=!state.lines; save(); applyLines();
-};
+$("#toggleLines").onclick=function(){ state.lines=!state.lines; save(); applyLines(); };
 function applyLines(){
   document.body.classList.toggle("nolines", !state.lines);
   $("#toggleLines").classList.toggle("on", state.lines);
 }
 $("#q").oninput=function(){
   var v=this.value.trim();
-  if(!v){ renderHome(); $("#chapters").classList.remove("searchres"); return; }
+  if(!v){ renderHome(); return; }
   var hits=DATA.filter(function(c){
     return c.title.indexOf(v)>=0 || c.body.replace(/<[^>]+>/g,"").indexOf(v)>=0 || c.id.toLowerCase()===v.toLowerCase();
   });
   var html='<div class="sechd">検索結果 '+hits.length+'件</div><div class="card">';
   hits.forEach(function(c){
     html+='<div class="qrow" data-id="'+esc(c.id)+'"><div class="qid">'+esc(c.id)+'</div>'
-      +'<div class="qt">'+esc(c.title)+'<div class="n muted sans">'+esc(c.ch)+'</div></div></div>';
+      +'<div class="qt">'+esc(c.title)+'<div class="n muted sans">'+esc(c.ch)+'</div></div>'
+      +'<div class="qmark"><span class="dots">'+dotsHtml(c.id)+'</span></div></div>';
   });
   html+='</div>';
   if(!hits.length) html='<div class="empty">該当なし</div>';
@@ -524,26 +652,29 @@ $("#q").oninput=function(){
     el.onclick=function(){
       var id=el.getAttribute("data-id");
       deck=hits.slice(); pos=deck.findIndex(function(c){return c.id===id});
-      listCtx=null; $("#title").textContent="検索結果"; show("study"); renderCard();
+      listCtx=null; roundLog={}; roundLabel="検索結果"; roundBase=hits.slice();
+      $("#title").textContent="検索結果"; show("study"); renderCard();
     };
   });
 };
 
-/* keyboard */
+/* キーボード：Space=解答表示 / 1=✕ 2=○ / ←→=移動 */
 document.addEventListener("keydown",function(e){
   if(current!=="study") return;
-  if(e.key===" "||e.key==="Enter"){ e.preventDefault(); if($("#st-tap").classList.contains("hidden")) move(1); else reveal(); }
+  if(e.key===" "||e.key==="Enter"){ e.preventDefault(); if(!revealed()) reveal(); else judge(true); return; }
   if(e.key==="ArrowRight") move(1);
   if(e.key==="ArrowLeft") move(-1);
-  if(e.key==="1") mark("again");
-  if(e.key==="2") mark("know");
+  if(revealed()){
+    if(e.key==="1"||e.key==="x") judge(false);
+    if(e.key==="2"||e.key==="o") judge(true);
+  }
 });
 
-/* swipe */
+/* スワイプ */
 (function(){
   var x0=null,y0=null;
   document.addEventListener("touchstart",function(e){
-    if(e.target.closest("header,.footnav")) { x0=null; return; }
+    if(e.target.closest("header,.footnav,.judge")) { x0=null; return; }
     x0=e.touches[0].clientX; y0=e.touches[0].clientY;
   },{passive:true});
   document.addEventListener("touchend",function(e){
