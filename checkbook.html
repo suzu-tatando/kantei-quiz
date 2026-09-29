@@ -392,7 +392,7 @@ var LS = "kanteiCheckbook.v1";
 var KEEP = 5;      /* 保存する履歴の数 */
 var USE  = 3;      /* 苦手判定に使う直近の回数 */
 
-var state = { hist:{}, n:{}, last:null, lines:true, sync:null, syncAt:0, ver:2 };
+var state = { hist:{}, n:{}, last:null, lines:true, sync:null, syncAt:0, gen:null, ver:2 };
 try{
   var raw=localStorage.getItem(LS);
   if(raw){
@@ -767,7 +767,8 @@ function syncNow(silent, cb){
   if(!silent) syncMsg("同期中…");
   var url=state.sync.url
     +"?a=sync&k="+encodeURIComponent(state.sync.key)
-    +"&d="+encodeURIComponent(encodeRecords());
+    +"&d="+encodeURIComponent(encodeRecords())
+    +(typeof state.gen==="number" ? "&g="+state.gen : "");
   jsonp(url, function(err,res){
     syncing=false;
     if(err){
@@ -782,11 +783,13 @@ function syncNow(silent, cb){
       return;
     }
     try{
+      if(typeof res.g==="number") state.gen=res.g;
       if(res.d){
         var d=decodeRecords(res.d);
         applyRecords(d.rec,"replace");
         state.syncAt=Date.now(); save(); syncStamp();
-        if(!silent) syncMsg("同期しました（"+d.count+"問）。","ok");
+        if(res.reset) syncMsg("他の端末で記録が消去されたため，この端末の記録も消去しました。","ok");
+        else if(!silent) syncMsg("同期しました（"+d.count+"問）。","ok");
       }
     }catch(e){
       if(!silent) syncMsg("受信した記録を読み取れませんでした。","err");
@@ -904,8 +907,28 @@ $("#go-shuffle").onclick=function(){
   for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
   startDeck(a,"ランダム");
 };
+function clearLocalRecords(){ state.hist={}; state.n={}; save(); renderHome(); }
 $("#reset").onclick=function(){
-  if(confirm("すべての正誤の記録を消去します。よろしいですか？")){ state.hist={}; state.n={}; save(); renderHome(); }
+  if(!syncConfigured()){
+    if(confirm("すべての正誤の記録を消去します。よろしいですか？")) clearLocalRecords();
+    return;
+  }
+  if(!confirm("すべての正誤の記録を消去します。\n同期しているiPhone・iPadの記録も，次に開いたときに消去されます。\nよろしいですか？")) return;
+  syncMsg("すべての端末の記録を消去しています…");
+  var url=state.sync.url+"?a=reset&k="+encodeURIComponent(state.sync.key);
+  jsonp(url, function(err,res){
+    if(err || !res || !res.ok){
+      var m = (res && res.err==="key") ? "合言葉が一致しません。" : "サーバーに接続できませんでした。";
+      syncMsg(m+"（消去していません）","err");
+      if(confirm(m+"\nこの端末の記録だけを消去しますか？\n（他の端末の記録は残り，次の同期で戻ってくる場合があります）")) clearLocalRecords();
+      return;
+    }
+    if(typeof res.g==="number") state.gen=res.g;
+    clearLocalRecords();
+    state.syncAt=Date.now(); save(); syncStamp();
+    syncMsg("すべての端末の記録を消去しました。","ok");
+    alert("すべての端末の記録を消去しました。\n他の端末は，次にアプリを開いたときに反映されます。");
+  });
 };
 $("#toggleLines").onclick=function(){ state.lines=!state.lines; save(); applyLines(); };
 function applyLines(){

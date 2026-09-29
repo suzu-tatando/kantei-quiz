@@ -21,9 +21,11 @@ function doGet(e) {
     if (String(p.k || '') !== SECRET) {
       out = { ok: false, err: 'key' };                 /* 合言葉が違う */
     } else if (p.a === 'ping') {
-      out = { ok: true, mode: 'ping' };                /* 接続テスト */
+      out = { ok: true, mode: 'ping', g: getGen_() };  /* 接続テスト */
+    } else if (p.a === 'reset') {
+      out = resetAll_();                               /* 全端末の記録を消去 */
     } else {
-      out = { ok: true, d: mergeRecords_(String(p.d || '1')) };
+      out = sync_(String(p.d || '1'), p.g);
     }
   } catch (err) {
     out = { ok: false, err: String((err && err.message) || err) };
@@ -37,25 +39,36 @@ function doGet(e) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
-/* 送られてきた記録とシート上の記録を突き合わせ，統合結果を返す */
-function mergeRecords_(payload) {
+/* ---------- 世代番号 ----------
+   リセットするたびに1つ増やす。端末が持つ世代より新しければ，
+   その端末の送信内容は採用せず，空の記録を返して消去を伝える。 */
+function getGen_() {
+  var v = PropertiesService.getScriptProperties().getProperty('gen');
+  return Number(v || 0);
+}
+function setGen_(g) {
+  PropertiesService.getScriptProperties().setProperty('gen', String(g));
+  var sh = getSheet_();
+  sh.getRange('E3').setValue('世代');
+  sh.getRange('E4').setValue(g);
+}
+
+/* ---------- 同期 ---------- */
+function sync_(payload, clientGen) {
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);                                 /* 同時書き込みを防ぐ */
   try {
+    var gen = getGen_();
+    var cg = (clientGen === '' || clientGen == null) ? gen : Number(clientGen);
+
+    /* 端末の世代が古い＝別の端末でリセットされた後。送信内容は捨てて現状を返す。 */
+    if (cg < gen) {
+      return { ok: true, d: currentPayload_(), g: gen, reset: true };
+    }
+
     if (payload.charAt(0) !== '1') throw new Error('format');
     var inc = decodeB64_(payload.slice(1));
-    var sh = getSheet_();
-
-    /* 現在の内容を読む */
-    var cur = [];
-    var last = sh.getLastRow();
-    if (last > 1) {
-      var vals = sh.getRange(2, 1, last - 1, 3).getValues();
-      for (var i = 0; i < vals.length; i++) {
-        cur[i * 2]     = Number(vals[i][1]) || 0;
-        cur[i * 2 + 1] = encodeHist_(vals[i][2]);
-      }
-    }
+    var cur = readSheet_();
 
     /* 問題ごとに「解答回数が多い方」を採用 */
     var len = Math.max(cur.length, inc.length);
@@ -66,23 +79,60 @@ function mergeRecords_(payload) {
       if ((nn || nb) && nn >= cn) { out[j] = nn; out[j + 1] = nb; }
       else                        { out[j] = cn; out[j + 1] = cb; }
     }
-
-    /* シートへ書き戻す */
-    var rows = [];
-    for (var k = 0; k * 2 < out.length; k++) {
-      rows.push(['Q' + (k + 1), out[k * 2] || 0, decodeHist_(out[k * 2 + 1] || 0)]);
-    }
-    if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, 3).clearContent();
-    if (rows.length) sh.getRange(2, 1, rows.length, 3).setValues(rows);
-    sh.getRange('E1').setValue('最終更新');
-    sh.getRange('E2').setValue(new Date());
-
-    return '1' + encodeB64_(out);
+    writeSheet_(out);
+    return { ok: true, d: '1' + encodeB64_(out), g: gen };
   } finally {
     lock.releaseLock();
   }
 }
 
+/* ---------- 全消去 ---------- */
+function resetAll_() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    var sh = getSheet_();
+    if (sh.getLastRow() > 1) {
+      sh.getRange(2, 1, sh.getLastRow() - 1, 3).clearContent();
+    }
+    var g = getGen_() + 1;
+    setGen_(g);
+    sh.getRange('E1').setValue('最終更新');
+    sh.getRange('E2').setValue(new Date());
+    return { ok: true, d: '1', g: g, reset: true };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* ---------- シート入出力 ---------- */
+function readSheet_() {
+  var sh = getSheet_();
+  var out = [];
+  var last = sh.getLastRow();
+  if (last > 1) {
+    var vals = sh.getRange(2, 1, last - 1, 3).getValues();
+    for (var i = 0; i < vals.length; i++) {
+      out[i * 2]     = Number(vals[i][1]) || 0;
+      out[i * 2 + 1] = encodeHist_(vals[i][2]);
+    }
+  }
+  return out;
+}
+function writeSheet_(bytes) {
+  var sh = getSheet_();
+  var rows = [];
+  for (var k = 0; k * 2 < bytes.length; k++) {
+    rows.push(['Q' + (k + 1), bytes[k * 2] || 0, decodeHist_(bytes[k * 2 + 1] || 0)]);
+  }
+  if (sh.getLastRow() > 1) sh.getRange(2, 1, sh.getLastRow() - 1, 3).clearContent();
+  if (rows.length) sh.getRange(2, 1, rows.length, 3).setValues(rows);
+  sh.getRange('E1').setValue('最終更新');
+  sh.getRange('E2').setValue(new Date());
+}
+function currentPayload_() {
+  return '1' + encodeB64_(readSheet_());
+}
 function getSheet_() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sh = ss.getSheetByName(SHEET_NAME);
@@ -97,6 +147,7 @@ function getSheet_() {
   return sh;
 }
 
+/* ---------- 変換 ---------- */
 /* 「○✕○」→ 1バイト（上位3bit=件数, 下位5bit=正誤） */
 function encodeHist_(s) {
   s = String(s == null ? '' : s);
