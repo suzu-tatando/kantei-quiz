@@ -413,7 +413,7 @@ if(!state.n) state.n={};
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(state)); }catch(e){} }
 
 var $=function(s){return document.querySelector(s)};
-var deck=[], pos=0, listCtx=null, current="home";
+var deck=[], pos=0, listCtx=null, current="home", posDirty=false;
 var roundLog={}, roundLabel="", roundBase=null;
 
 /* ---------- 履歴 ---------- */
@@ -476,6 +476,11 @@ function renderHome(){
   $("#s-weak").textContent=weak;
   $("#s-rate").textContent = done? Math.round(okNow/done*100)+"%" : "—";
   $("#bar").style.width=(DATA.length?okNow/DATA.length*100:0)+"%";
+
+  var li=DATA.findIndex(function(c){return c.id===state.last});
+  $("#go-all").innerHTML = li>0
+    ? '続きから<small>'+esc(DATA[li].id)+' から再開</small>'
+    : '続きから<small>Q1から順番に</small>';
 
   var html="", lastPart=null;
   chapters().forEach(function(ch){
@@ -549,6 +554,7 @@ function startDeck(arr,label){
 }
 function renderCard(){
   var c=deck[pos]; if(!c) return;
+  if(state.last!==c.id) posDirty=true;      /* この端末で位置が進んだ */
   state.last=c.id; save();
   $("#st-meta").textContent=c.id+"　"+c.ch+"　（"+(pos+1)+"／"+deck.length+"）";
   $("#st-dots").innerHTML=dotsHtml(c.id);
@@ -759,31 +765,46 @@ function syncStamp(){
   if(!syncConfigured()){ el.textContent=""; return; }
   el.textContent = state.syncAt ? "最終同期 "+new Date(state.syncAt).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}) : "自動同期：待機中";
 }
-var syncing=false, syncTimer=null, syncAgain=false;
+var syncing=false, syncTimer=null, syncAgain=false, syncWaiters=[];
+function syncDone(err){
+  var ws=syncWaiters; syncWaiters=[];
+  ws.forEach(function(f){ try{ f(err||null); }catch(e){} });
+}
 function syncNow(silent, cb){
-  if(!syncConfigured()){ if(!silent) syncMsg("URLと合言葉を入力してください。","err"); return; }
+  if(cb) syncWaiters.push(cb);
+  if(!syncConfigured()){ if(!silent) syncMsg("URLと合言葉を入力してください。","err"); syncDone(new Error("unconfigured")); return; }
   if(syncing){ syncAgain=true; return; }
   syncing=true;
   if(!silent) syncMsg("同期中…");
+  /* 位置はこの端末で進んだときだけ送る（最後に動かした端末の位置が残る） */
+  var sendPos = posDirty ? DATA.findIndex(function(c){return c.id===state.last}) : -1;
   var url=state.sync.url
     +"?a=sync&k="+encodeURIComponent(state.sync.key)
     +"&d="+encodeURIComponent(encodeRecords())
-    +(typeof state.gen==="number" ? "&g="+state.gen : "");
+    +(typeof state.gen==="number" ? "&g="+state.gen : "")
+    +(sendPos>=0 ? "&p="+sendPos : "");
   jsonp(url, function(err,res){
     syncing=false;
     if(err){
       if(!silent) syncMsg("接続できませんでした（"+(err.message==="timeout"?"応答なし":"通信エラー")+"）。URLが正しいか，スクリプトが「全員」に公開されているかご確認ください。","err");
-      if(cb) cb(err);
+      syncDone(err);
       return;
     }
     if(!res || !res.ok){
       var m = (res && res.err==="key") ? "合言葉が一致しません。" : "同期に失敗しました（"+((res&&res.err)||"不明")+"）。";
       if(!silent) syncMsg(m,"err");
-      if(cb) cb(new Error(m));
+      syncDone(new Error(m));
       return;
     }
+    if(sendPos>=0) posDirty=false;
     try{
       if(typeof res.g==="number") state.gen=res.g;
+      /* 続きから用の位置：他の端末で進んでいればそれに合わせる */
+      if(typeof res.p==="number" && res.p>=0 && res.p<DATA.length){
+        state.last=DATA[res.p].id;
+      }else if(res.p===null && res.reset){
+        state.last=null;
+      }
       if(res.d){
         var d=decodeRecords(res.d);
         applyRecords(d.rec,"replace");
@@ -794,7 +815,7 @@ function syncNow(silent, cb){
     }catch(e){
       if(!silent) syncMsg("受信した記録を読み取れませんでした。","err");
     }
-    if(cb) cb(null);
+    syncDone(null);
     if(syncAgain){ syncAgain=false; setTimeout(function(){ syncNow(true); },300); }
   });
 }
@@ -897,17 +918,32 @@ $("#prev").onclick=$("#prev2").onclick=function(){move(-1)};
 $("#next").onclick=$("#next2").onclick=function(){move(1)};
 
 $("#go-weak").onclick=function(){ startDeck(weakOrder(DATA), "苦手順"); };
-$("#go-all").onclick=function(){
-  startDeck(DATA, "全問");
+function resumeAll(){
   var i=DATA.findIndex(function(c){return c.id===state.last});
+  startDeck(DATA, "全問");
   if(i>0){ pos=i; renderCard(); }
+}
+$("#go-all").onclick=function(){
+  if(!syncConfigured()){ resumeAll(); return; }
+  /* 他の端末で進んだ位置を取りに行ってから開く（遅いときは待たせずに開始） */
+  var btn=$("#go-all"), keep=btn.innerHTML, started=false;
+  btn.innerHTML='続きから<small>最新の位置を確認中…</small>';
+  function go(){
+    if(started) return;
+    started=true; btn.innerHTML=keep; resumeAll();
+  }
+  setTimeout(go, 2500);
+  syncNow(true, go);
 };
 $("#go-shuffle").onclick=function(){
   var a=DATA.slice();
   for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
   startDeck(a,"ランダム");
 };
-function clearLocalRecords(){ state.hist={}; state.n={}; save(); renderHome(); }
+function clearLocalRecords(){
+  state.hist={}; state.n={}; state.last=null; posDirty=false;
+  save(); renderHome();
+}
 $("#reset").onclick=function(){
   if(!syncConfigured()){
     if(confirm("すべての正誤の記録を消去します。よろしいですか？")) clearLocalRecords();

@@ -25,7 +25,7 @@ function doGet(e) {
     } else if (p.a === 'reset') {
       out = resetAll_();                               /* 全端末の記録を消去 */
     } else {
-      out = sync_(String(p.d || '1'), p.g);
+      out = sync_(String(p.d || '1'), p.g, p.p);
     }
   } catch (err) {
     out = { ok: false, err: String((err && err.message) || err) };
@@ -53,8 +53,22 @@ function setGen_(g) {
   sh.getRange('E4').setValue(g);
 }
 
+/* ---------- 最後に解いた問題（続きから用） ---------- */
+function getPos_() {
+  var v = PropertiesService.getScriptProperties().getProperty('pos');
+  return (v === null || v === '' || v == null) ? null : Number(v);
+}
+function setPos_(i) {
+  var props = PropertiesService.getScriptProperties();
+  if (i === null) { props.deleteProperty('pos'); }
+  else { props.setProperty('pos', String(i)); }
+  var sh = getSheet_();
+  sh.getRange('E5').setValue('最後に解いた問題');
+  sh.getRange('E6').setValue(i === null ? '' : 'Q' + (i + 1));
+}
+
 /* ---------- 同期 ---------- */
-function sync_(payload, clientGen) {
+function sync_(payload, clientGen, clientPos) {
   var lock = LockService.getScriptLock();
   lock.waitLock(20000);                                 /* 同時書き込みを防ぐ */
   try {
@@ -63,7 +77,13 @@ function sync_(payload, clientGen) {
 
     /* 端末の世代が古い＝別の端末でリセットされた後。送信内容は捨てて現状を返す。 */
     if (cg < gen) {
-      return { ok: true, d: currentPayload_(), g: gen, reset: true };
+      return { ok: true, d: currentPayload_(), g: gen, p: getPos_(), reset: true };
+    }
+
+    /* 位置は「その端末で進んだときだけ」送られてくる。後に届いた方を採用する。 */
+    if (clientPos !== '' && clientPos != null) {
+      var pi = Number(clientPos);
+      if (pi >= 0 && pi < 1000) setPos_(pi);
     }
 
     if (payload.charAt(0) !== '1') throw new Error('format');
@@ -80,7 +100,7 @@ function sync_(payload, clientGen) {
       else                        { out[j] = cn; out[j + 1] = cb; }
     }
     writeSheet_(out);
-    return { ok: true, d: '1' + encodeB64_(out), g: gen };
+    return { ok: true, d: '1' + encodeB64_(out), g: gen, p: getPos_() };
   } finally {
     lock.releaseLock();
   }
@@ -97,9 +117,10 @@ function resetAll_() {
     }
     var g = getGen_() + 1;
     setGen_(g);
+    setPos_(null);
     sh.getRange('E1').setValue('最終更新');
     sh.getRange('E2').setValue(new Date());
-    return { ok: true, d: '1', g: g, reset: true };
+    return { ok: true, d: '1', g: g, p: null, reset: true };
   } finally {
     lock.releaseLock();
   }
