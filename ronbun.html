@@ -329,6 +329,27 @@ body.sheet .abox u.s,body.sheet .abox u.d{color:transparent;background:color-mix
 body.sheet .abox u.open{color:inherit;background:transparent}
 body.sheet .abox u.s.open{text-decoration-color:var(--accent)}
 body.sheet .abox u.d.open{text-decoration-color:var(--accent2)}
+/* 骨子：基準の該当箇所 */
+.khead{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+.khead p{margin:0;font-size:12.5px;line-height:1.8;color:var(--sub);text-indent:0}
+.kopen{align-self:flex-start;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;font-size:12.5px;cursor:pointer;color:var(--ink)}
+.kchip{display:inline-block;font-size:10.5px;font-weight:700;border-radius:4px;padding:0 6px;margin-right:6px;line-height:1.7;vertical-align:1px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+.kchip.kk{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.kchip.kr{background:color-mix(in srgb,var(--accent2) 18%,transparent);color:var(--accent2)}
+.kchip.kn{background:color-mix(in srgb,var(--sub) 16%,transparent);color:var(--sub)}
+.kcites{display:flex;flex-direction:column;gap:2px;margin:-2px 0 8px}
+.kcite{font-size:12px;line-height:1.6;color:var(--sub);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+details.kref{margin-top:8px;border-top:1px dashed var(--line);padding-top:6px}
+details.kref summary{cursor:pointer;font-size:12.5px;color:var(--accent);list-style:none;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+details.kref summary::-webkit-details-marker{display:none}
+details.kref summary::before{content:"＋ "}
+details.kref[open] summary::before{content:"－ "}
+.kq{margin-top:8px;padding:8px 12px;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent);border-radius:0 8px 8px 0}
+.kq.kr{border-left-color:var(--accent2);background:color-mix(in srgb,var(--accent2) 7%,transparent)}
+.kqh{font-size:11px;color:var(--sub);margin-bottom:2px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+.abox .kq p{margin:0;text-indent:0;font-size:14.5px;line-height:1.85}
+body.sheet .abox .kq p{color:transparent;background:color-mix(in srgb,var(--ng) 18%,transparent);border-radius:3px;cursor:pointer;margin:2px 0}
+body.sheet .abox .kq p.open{color:inherit;background:transparent}
 @media (max-width:760px){ .tags span small{display:inline;margin-left:4px} .legend .lg-note{margin-left:0;width:100%} }
 </style>
 </head>
@@ -339,7 +360,7 @@ body.sheet .abox u.d.open{text-decoration-color:var(--accent2)}
     <button class="iconbtn sans" id="back" style="display:none">‹ 戻る</button>
     <h1 id="title">鑑定理論 論文チェックブック</h1>
     <button class="iconbtn sans" id="toggleLines" title="下線の表示切替">下線</button>
-    <button class="iconbtn sans" id="toggleSheet" title="解答例の基準・留意事項を隠す">赤シート</button>
+    <button class="iconbtn sans" id="toggleSheet" title="基準・留意事項の文言を隠す">赤シート</button>
   </div>
   <div class="bar"><i id="bar"></i></div>
 </header>
@@ -485,7 +506,7 @@ var LS = "kanteiRonbun.v1";
 var KEEP = 5;      /* 保存する履歴の数 */
 var USE  = 3;      /* 苦手判定に使う直近の回数 */
 
-var state = { hist:{}, n:{}, last:null, sheet:false, lines:true, tab:"k", sync:null, syncAt:0, gen:null, ver:2 };
+var state = { hist:{}, n:{}, last:null, sheet:false, lines:true, kopen:false, tab:"k", sync:null, syncAt:0, gen:null, ver:2 };
 try{
   var raw=localStorage.getItem(LS);
   if(raw){
@@ -674,6 +695,13 @@ function paintAnswer(){
   var t=state.tab==="a"?"a":"k";
   $("#st-a").innerHTML=t==="a"?c.a:c.k;
   [].forEach.call(document.querySelectorAll("#st-tabs button"),function(b){ b.classList.toggle("on", b.getAttribute("data-tab")===t); });
+  if(t==="k") applyKopen();
+}
+/* 骨子：基準の文言をまとめて開く／閉じる */
+function applyKopen(){
+  [].forEach.call(document.querySelectorAll("#st-a details.kref"),function(d){ d.open=!!state.kopen; });
+  var b=document.querySelector("#st-a .kopen");
+  if(b) b.textContent = state.kopen ? "基準の文言をすべて閉じる" : "基準の文言をすべて開く";
 }
 function setTab(t){ state.tab=t; save(); paintAnswer(); }
 function reveal(){
@@ -1090,7 +1118,8 @@ function applySheet(){
   b.onclick=function(){ setTab(b.getAttribute("data-tab")); };
 });
 $("#st-a").addEventListener("click",function(e){
-  var m=e.target.closest(".abox u.s, .abox u.d");
+  if(e.target.closest(".kopen")){ state.kopen=!state.kopen; save(); applyKopen(); return; }
+  var m=e.target.closest(".abox u.s, .abox u.d, .abox .kq p");
   if(m && document.body.classList.contains("sheet")) m.classList.toggle("open");
 });
 $("#q").oninput=function(){
