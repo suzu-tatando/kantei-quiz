@@ -266,7 +266,7 @@ function renderBoard(){
   h+=(c.rows||[]).map(rowHTML).join("");
   if(c.refs&&c.refs.length){
     h+='<div class="refs"><span>暗記チェックブック：</span>'
-      +c.refs.map(function(q){return '<a href="checkbook.html">'+esc(q)+'</a>';}).join("")+'</div>';
+      +c.refs.map(function(q){return '<a href="checkbook.html#q='+encodeURIComponent(q)+'">'+esc(q)+'</a>';}).join("")+'</div>';
   }
   $("#board").innerHTML=h;
   $("#pos").textContent=(cur+1)+" / "+deck.length;
