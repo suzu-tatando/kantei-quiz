@@ -897,6 +897,18 @@ $("#up-file").onchange=function(){
 };
 /* リンクで開かれた場合（既に開いている状態で開かれるとハッシュ変更だけになるので両方拾う） */
 function checkHash(){
+  /* #q=Q54 … 要点板書などから特定の問題を直接開く */
+  var mq=/^#q=([A-Za-z0-9]+)$/.exec(location.hash||"");
+  if(mq){
+    var qid=mq[1].toUpperCase();
+    var qi=DATA.findIndex(function(c){ return c.id.toUpperCase()===qid; });
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    if(qi<0){ alert("その問題（"+qid+"）は見つかりませんでした。"); return; }
+    startDeck(DATA, "全問");
+    pos=qi; renderCard();
+    window.scrollTo(0,0);
+    return;
+  }
   var m=/^#s=(.+)$/.exec(location.hash||"");
   if(!m) return;
   var ok=askImport(decodeURIComponent(m[1]));
