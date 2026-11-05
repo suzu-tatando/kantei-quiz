@@ -1039,6 +1039,18 @@ $("#up-file").onchange=function(){
 };
 /* リンクで開かれた場合（既に開いている状態で開かれるとハッシュ変更だけになるので両方拾う） */
 function checkHash(){
+  /* #q=問題54 / #q=54 … 要点板書などから特定の問題を直接開く */
+  var mq=/^#q=(.+)$/.exec(location.hash||"");
+  if(mq){
+    var key=decodeURIComponent(mq[1]).replace(/^問題/,"");
+    var qi=DATA.findIndex(function(c){ return String(c.n)===key || c.id==="問題"+key; });
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    if(qi<0){ alert("その問題（"+key+"）は見つかりませんでした。"); return; }
+    startDeck(DATA, "全問");
+    pos=qi; renderCard();
+    window.scrollTo(0,0);
+    return;
+  }
   var m=/^#s=(.+)$/.exec(location.hash||"");
   if(!m) return;
   var ok=askImport(decodeURIComponent(m[1]));
