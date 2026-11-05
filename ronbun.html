@@ -370,7 +370,7 @@ body.sheet .abox .kq p.open{color:inherit;background:transparent}
   <section id="view-home">
     <div class="hero">
       <h2>鑑定理論（論文式）</h2>
-      <div class="muted sans">論文 基本問題40問 ／ 問題・骨子・解答例</div>
+      <div class="muted sans">論文 87問（問題1〜52・66〜100）／ 問題・骨子・解答例</div>
       <div class="stats sans">
         <div class="stat"><b id="s-total">0</b><span>全問</span></div>
         <div class="stat"><b id="s-done">0</b><span>出題済</span></div>
@@ -816,16 +816,20 @@ function weakOrder(pool){
 }
 
 /* ---------- 端末間の引き継ぎ ---------- */
-/* 1問 = 2バイト（通算回数 / 直近5回の正誤）。問題の並び順は固定なのでIDは持たない。 */
+/* 1問 = 2バイト（通算回数 / 直近5回の正誤）。問題番号nの記録を (n-1)*2 バイト目に置くので，
+   未収録の問題（53〜65など）があとから追加されても，ほかの問題の記録はずれない。 */
+var BYN={}; DATA.forEach(function(c){ BYN[c.n]=c; });
 function encodeRecords(){
   var b=[], lastNonZero=-1;
-  DATA.forEach(function(c,i){
+  DATA.forEach(function(c){
     var h=histOf(c.id), bits=0;
     for(var k=0;k<h.length;k++) if(h[k]) bits|=1<<k;
     var b0=Math.min(255,attemptsOf(c.id));
     var b1=(h.length<<5)|(bits&31);
-    b.push(b0,b1);
-    if(b0||b1) lastNonZero=i;
+    var i=c.n-1;
+    while(b.length<i*2) b.push(0);
+    b[i*2]=b0; b[i*2+1]=b1;
+    if(b0||b1) lastNonZero=Math.max(lastNonZero,i);
   });
   b.length=(lastNonZero+1)*2;                       /* 末尾の未出題ぶんは捨てる */
   var s=""; for(var i=0;i<b.length;i++) s+=String.fromCharCode(b[i]);
@@ -837,12 +841,12 @@ function decodeRecords(payload){
   while(s.length%4) s+="=";
   var bin=atob(s), out={}, count=0;
   for(var i=0;i+1<bin.length;i+=2){
-    var idx=i/2; if(idx>=DATA.length) break;
+    var c=BYN[i/2+1]; if(!c) continue;
     var b0=bin.charCodeAt(i), b1=bin.charCodeAt(i+1);
     var len=(b1>>5)&7, bits=b1&31;
     if(!b0 && !len) continue;
     var h=[]; for(var k=0;k<len;k++) h.push((bits>>k)&1);
-    out[DATA[idx].id]={h:h, n:b0||len};
+    out[c.id]={h:h, n:b0||len};
     count++;
   }
   return {rec:out, count:count};
