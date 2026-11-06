@@ -107,6 +107,36 @@ header{
 body.hide .kw{background:var(--mask);color:transparent;border-radius:4px;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--ink) 20%, transparent);cursor:pointer}
 body.hide .kw.open{background:linear-gradient(transparent 62%, var(--marker) 62%);color:inherit;box-shadow:none}
 
+/* 起点キーワード */
+.r-key{border:2.5px solid var(--red);border-radius:12px;padding:10px 12px;margin:6px 0 14px;
+  font-size:16px;font-weight:800;color:var(--red);background:color-mix(in srgb,var(--red) 6%, transparent);text-align:center}
+/* 流れのノード */
+.r-step{display:flex;gap:10px;margin:0;position:relative}
+.r-step .rail{flex:none;width:22px;display:flex;flex-direction:column;align-items:center}
+.r-step .num{width:21px;height:21px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;flex:none;margin-top:4px}
+.r-step .line{flex:1;width:2px;background:color-mix(in srgb,var(--accent) 40%, transparent);margin:2px 0}
+.r-step .body{flex:1;padding:2px 0 14px}
+.r-step .shead{font-size:14px;font-weight:700;color:var(--accent);display:inline-flex;align-items:center;gap:4px;
+  border-bottom:1px dashed color-mix(in srgb,var(--accent) 55%, transparent);cursor:pointer}
+.r-step .shead:after{content:"›";font-weight:800}
+.r-step .stx{font-size:15px;margin-top:2px}
+.r-step:last-child .line{display:none}
+/* 他章とのつながり */
+.r-links{border:1.5px solid var(--accent);border-radius:12px;padding:10px 12px;margin:16px 0 4px;
+  background:color-mix(in srgb,var(--accent) 5%, transparent)}
+.r-links .cap{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px}
+.r-links .li{display:flex;gap:7px;align-items:flex-start;margin:5px 0;font-size:14px}
+.r-links .lk{flex:none;color:var(--accent);font-weight:700;cursor:pointer;border-bottom:1px dashed currentColor;white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis}
+.r-links .lw{flex:1;color:var(--ink)}
+/* タグ */
+.tagbar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch}
+.tagbar::-webkit-scrollbar{display:none}
+.tag{flex:none;font-size:12px;border:1px solid var(--line);background:var(--board);color:var(--sub);
+  border-radius:999px;padding:5px 11px;cursor:pointer;white-space:nowrap}
+.tag.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.btags .tag{font-size:11px;padding:3px 9px}
 .refs{margin-top:16px;padding-top:10px;border-top:1px dashed var(--line);font-size:12px;color:var(--sub);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .refs a{color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:1px 8px}
 
@@ -138,7 +168,7 @@ body.hide .kw.open{background:linear-gradient(transparent 62%, var(--marker) 62%
 <header>
   <div class="hd">
     <button class="back hidden" id="back">‹ 一覧</button>
-    <h1>鑑定理論 章別 要点板書<span class="sub" id="hsub">不動産鑑定評価基準 総論1〜9章・各論1〜3章</span></h1>
+    <h1>鑑定理論 章別 要点板書<span class="sub" id="hsub">総論1〜9章・各論1〜3章＋横断10枚（論証の型）</span></h1>
     <button class="iconbtn" id="maskBtn">暗記</button>
   </div>
 </header>
@@ -150,6 +180,7 @@ body.hide .kw.open{background:linear-gradient(transparent 62%, var(--marker) 62%
       <button class="iconbtn" id="hotBtn">頻出のみ</button>
       <button class="iconbtn" id="todoBtn">未チェック</button>
     </div>
+    <div class="tagbar" id="tagbar"></div>
     <div id="list"></div>
     <div class="applinks">
       <a href="index.html">一問一答</a><a href="checkbook.html">暗記チェックブック</a><a href="ronbun.html">論文チェックブック</a><a href="anki.html">穴埋め暗記</a><a href="reiji.html">例示一覧</a><a href="omomi.html">重み付け</a>
@@ -175,7 +206,7 @@ body.hide .kw.open{background:linear-gradient(transparent 62%, var(--marker) 62%
 var DATA = window.YOUTEN_DATA || [];
 var $=function(s){return document.querySelector(s)};
 var LS="youten_v1";
-var state={done:{},mask:false,hot:false,todo:false};
+var state={done:{},mask:false,hot:false,todo:false,tag:null};
 try{ var sv=JSON.parse(localStorage.getItem(LS)||"{}"); if(sv&&sv.done) state.done=sv.done; if(sv&&sv.mask) state.mask=!!sv.mask; }catch(e){}
 function save(){ try{ localStorage.setItem(LS, JSON.stringify({done:state.done,mask:state.mask})); }catch(e){} }
 
@@ -192,15 +223,32 @@ function filtered(){
   return DATA.filter(function(c){
     if(state.hot && !c.hot) return false;
     if(state.todo && state.done[c.id]) return false;
+    if(state.tag && !((c.tags||[]).indexOf(state.tag)>=0)) return false;
     if(!t) return true;
-    var hay=[c.ch,c.sec,c.title].concat((c.rows||[]).map(function(r){
+    var hay=[c.ch,c.sec,c.title,(c.tags||[]).join(' ')].concat((c.rows||[]).map(function(r){
       var a=[];
       if(r.v) a.push(Array.isArray(r.v)?r.v.join(" "):r.v);
-      if(r.m) a.push(r.m); if(r.label) a.push(r.label);
-      (r.items||[]).forEach(function(it){ a.push(Array.isArray(it)?it.join(" "):(it.v+" "+(it.m||""))); });
+      if(r.m) a.push(r.m); if(r.label) a.push(r.label); if(r.head) a.push(r.head);
+      (r.items||[]).forEach(function(it){ a.push(Array.isArray(it)?it.join(" "):((it.v||"")+" "+(it.m||"")+" "+(it.head||""))); });
       return a.join(" ");
     })).join(" ");
     return plain(hay).indexOf(t)>=0;
+  });
+}
+function renderTagbar(){
+  var counts={};
+  DATA.forEach(function(c){ (c.tags||[]).forEach(function(t){ counts[t]=(counts[t]||0)+1; }); });
+  var tags=Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]||a.localeCompare(b,'ja'); });
+  var host=$("#tagbar"); host.innerHTML="";
+  var all=document.createElement("button");
+  all.className="tag"+(state.tag?"":" on"); all.textContent="すべて";
+  all.onclick=function(){ state.tag=null; renderTagbar(); renderIndex(); };
+  host.appendChild(all);
+  tags.forEach(function(t){
+    var b=document.createElement("button");
+    b.className="tag"+(state.tag===t?" on":""); b.textContent=t+" "+counts[t];
+    b.onclick=function(){ state.tag=(state.tag===t?null:t); renderTagbar(); renderIndex(); };
+    host.appendChild(b);
   });
 }
 function renderIndex(){
@@ -230,8 +278,19 @@ function renderIndex(){
 }
 
 /* ---------- 板書 ---------- */
-function rowHTML(r){
+function rowHTML(r,ctx){
   switch(r.type||r.t){
+    case "key": return '<div class="r-key">'+kw(r.v)+'</div>';
+    case "step":
+      ctx.n=(ctx.n||0)+1;
+      return '<div class="r-step"><div class="rail"><span class="num">'+ctx.n+'</span><span class="line"></span></div>'
+        +'<div class="body">'+(r.to?'<span class="shead" data-go="'+esc(r.to)+'">'+kw(r.head||"")+'</span>':'<span class="shead" style="cursor:default;border:none">'+kw(r.head||"")+'</span>')
+        +'<div class="stx">'+kw(r.v||"")+'</div>'+(r.m?'<div class="memo">'+kw(r.m)+'</div>':'')+'</div></div>';
+    case "links":
+      return '<div class="r-links"><div class="cap">'+esc(r.label||"他章とのつながり")+'</div>'
+        +(r.items||[]).map(function(it){
+           return '<div class="li"><span class="lk" data-go="'+esc(it.to)+'">'+esc(it.head)+'</span><span class="lw">'+kw(it.v)+'</span></div>';
+         }).join("")+'</div>';
     case "h": return '<div class="r-h">'+kw(r.v)+'</div>';
     case "warn": return '<div class="r-warn">'+kw(r.v)+'</div>';
     case "memo": return '<div class="r-memo">'+kw(r.v)+'</div>';
@@ -262,8 +321,11 @@ function renderBoard(){
   var c=deck[cur]; if(!c) return;
   var h='<div class="bhead"><div class="ch">'+esc(c.part)+'　'+esc(c.ch)+'</div>'
     +'<div class="t">'+esc(c.title)+(c.n?'<span class="num">'+esc(c.n)+'</span>':'')+(c.hot?'<span class="chip hot">頻出</span>':'')+'</div>'
-    +(c.sec?'<div class="secname">'+esc(c.sec)+'</div>':'')+'</div>';
-  h+=(c.rows||[]).map(rowHTML).join("");
+    +(c.sec?'<div class="secname">'+esc(c.sec)+'</div>':'')
+    +((c.tags&&c.tags.length)?'<div class="btags">'+c.tags.map(function(t){return '<button class="tag" data-tag="'+esc(t)+'">'+esc(t)+'</button>';}).join("")+'</div>':'')
+    +'</div>';
+  var ctx={};
+  h+=(c.rows||[]).map(function(r){return rowHTML(r,ctx);}).join("");
   if(c.refs&&c.refs.length){
     h+='<div class="refs"><span>暗記チェックブック：</span>'
       +c.refs.map(function(q){return '<a href="checkbook.html#q='+encodeURIComponent(q)+'">'+esc(q)+'</a>';}).join("")+'</div>';
@@ -278,7 +340,21 @@ function renderBoard(){
   d.classList.toggle("off", !state.done[c.id]);
   window.scrollTo(0,0);
 }
-function open(i){
+var hist=[];
+function openById(id,push){
+  var i=deck.findIndex(function(c){return c.id===id;});
+  if(i<0){ /* 絞り込みで外れている場合は解除してから開く */
+    state.tag=null; state.hot=false; state.todo=false; $("#q").value="";
+    $("#hotBtn").classList.remove("on"); $("#todoBtn").classList.remove("on");
+    deck=filtered(); renderTagbar();
+    i=deck.findIndex(function(c){return c.id===id;});
+  }
+  if(i<0) return;
+  if(push!==false && view==="board" && deck[cur]) hist.push(deck[cur].id);
+  open(i,true);
+}
+function open(i,keepHist){
+  if(!keepHist) hist=[];
   cur=i; view="board";
   $("#indexView").classList.add("hidden");
   $("#boardView").classList.remove("hidden");
@@ -293,13 +369,16 @@ function toIndex(){
   $("#boardView").classList.add("hidden");
   $("#fnav").classList.add("hidden");
   $("#back").classList.add("hidden");
-  $("#hsub").textContent="不動産鑑定評価基準 総論1〜9章・各論1〜3章";
-  renderIndex(); window.scrollTo(0,0);
+  $("#hsub").textContent="総論1〜9章・各論1〜3章＋横断10枚（論証の型）";
+  renderTagbar(); renderIndex(); window.scrollTo(0,0);
 }
 function move(d){ var n=cur+d; if(n<0||n>=deck.length) return; cur=n; renderBoard(); }
 
 /* ---------- events ---------- */
-$("#back").onclick=toIndex;
+$("#back").onclick=function(){
+  if(hist.length){ var id=hist.pop(); openById(id,false); return; }
+  toIndex();
+};
 $("#prev").onclick=function(){move(-1)};
 $("#next").onclick=function(){move(1)};
 $("#done").onclick=function(){
@@ -318,6 +397,10 @@ function applyMask(){
 $("#maskBtn").onclick=function(){ state.mask=!state.mask; save(); applyMask(); };
 document.addEventListener("click",function(e){
   var t=e.target;
+  var go=t.closest?t.closest("[data-go]"):null;
+  if(go){ e.preventDefault(); openById(go.getAttribute("data-go"),true); return; }
+  var tg=t.closest?t.closest("[data-tag]"):null;
+  if(tg){ e.preventDefault(); state.tag=tg.getAttribute("data-tag"); renderTagbar(); toIndex(); return; }
   if(state.mask && t.classList && t.classList.contains("kw")) t.classList.toggle("open");
 });
 document.addEventListener("keydown",function(e){
@@ -339,7 +422,7 @@ document.addEventListener("keydown",function(e){
 
 applyMask();
 if(!DATA.length){ $("#list").innerHTML='<div class="emptymsg">データ（youten-data.js）が読み込めませんでした。</div>'; }
-else renderIndex();
+else { renderTagbar(); renderIndex(); }
 </script>
 </body>
 </html>
