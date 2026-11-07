@@ -129,6 +129,34 @@ body.hide .kw.open{background:linear-gradient(transparent 62%, var(--marker) 62%
 .r-links .li{display:flex;gap:7px;align-items:flex-start;margin:5px 0;font-size:14px}
 .r-links .lk{flex:none;color:var(--accent);font-weight:700;cursor:pointer;border-bottom:1px dashed currentColor;white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis}
 .r-links .lw{flex:1;color:var(--ink)}
+/* 階層マップ（上位⇄下位） */
+.hier{border:1.5px solid var(--green);border-radius:12px;margin:0 0 12px;overflow:hidden;
+  background:color-mix(in srgb,var(--green) 5%, transparent)}
+.hier .hcap{display:flex;align-items:center;gap:8px;font-size:11.5px;font-weight:700;color:var(--green);
+  padding:6px 10px;border-bottom:1px solid color-mix(in srgb,var(--green) 30%, transparent);cursor:pointer}
+.hier .hcap .sp{flex:1;font-weight:400;color:var(--sub)}
+.hier .hcap .cv{font-weight:800}
+.hier .hbody{padding:6px 10px 9px}
+.hier.closed .hbody{display:none}
+.hrow{display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+.hrow .dir{flex:none;width:52px;font-size:11.5px;font-weight:700;line-height:1.5;padding-top:3px}
+.hrow.up .dir{color:var(--red)} .hrow.sib .dir{color:var(--orange)} .hrow.down .dir{color:var(--accent)}
+.hrow .hitems{flex:1;display:flex;flex-direction:column;gap:4px}
+.hitem{display:flex;gap:6px;align-items:flex-start;font-size:13.5px;line-height:1.6}
+.hitem .hk{flex:none;max-width:48%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  border:1px solid var(--line);background:var(--board);border-radius:999px;padding:1px 9px;
+  font-size:12px;font-weight:700;cursor:pointer;color:var(--accent)}
+.hrow.up .hitem .hk{color:var(--red);border-color:color-mix(in srgb,var(--red) 45%, transparent)}
+.hrow.sib .hitem .hk{color:var(--orange);border-color:color-mix(in srgb,var(--orange) 45%, transparent)}
+.hitem .hw{flex:1;color:var(--ink)}
+.hroot{font-size:12.5px;color:var(--sub);padding:2px 0}
+/* 書き出しの型 */
+.lead{border-left:4px solid var(--orange);background:color-mix(in srgb,var(--orange) 6%, transparent);
+  border-radius:0 10px 10px 0;padding:8px 11px;margin:0 0 14px}
+.lead .lcap{font-size:11.5px;font-weight:700;color:var(--orange);margin-bottom:3px}
+.lead ol{margin:0;padding-left:1.25em}
+.lead li{font-size:13.5px;line-height:1.75;margin:3px 0}
+@media (max-width:460px){ .hrow .dir{width:48px;font-size:11px} .hitem .hk{max-width:100%} }
 /* タグ */
 .tagbar{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;-webkit-overflow-scrolling:touch}
 .tagbar::-webkit-scrollbar{display:none}
@@ -183,7 +211,7 @@ body.hide .kw.open{background:linear-gradient(transparent 62%, var(--marker) 62%
     <div class="tagbar" id="tagbar"></div>
     <div id="list"></div>
     <div class="applinks">
-      <a href="index.html">一問一答</a><a href="checkbook.html">暗記チェックブック</a><a href="ronbun.html">論文チェックブック</a><a href="anki.html">穴埋め暗記</a><a href="reiji.html">例示一覧</a><a href="omomi.html">重み付け</a>
+      <a href="sojo.html">遡上ドリル</a><a href="index.html">一問一答</a><a href="checkbook.html">暗記チェックブック</a><a href="ronbun.html">論文チェックブック</a><a href="anki.html">穴埋め暗記</a><a href="reiji.html">例示一覧</a><a href="omomi.html">重み付け</a>
     </div>
   </div>
 
@@ -206,9 +234,9 @@ body.hide .kw.open{background:linear-gradient(transparent 62%, var(--marker) 62%
 var DATA = window.YOUTEN_DATA || [];
 var $=function(s){return document.querySelector(s)};
 var LS="youten_v1";
-var state={done:{},mask:false,hot:false,todo:false,tag:null};
-try{ var sv=JSON.parse(localStorage.getItem(LS)||"{}"); if(sv&&sv.done) state.done=sv.done; if(sv&&sv.mask) state.mask=!!sv.mask; }catch(e){}
-function save(){ try{ localStorage.setItem(LS, JSON.stringify({done:state.done,mask:state.mask})); }catch(e){} }
+var state={done:{},mask:false,hot:false,todo:false,tag:null,hclose:false};
+try{ var sv=JSON.parse(localStorage.getItem(LS)||"{}"); if(sv&&sv.done) state.done=sv.done; if(sv&&sv.mask) state.mask=!!sv.mask; if(sv&&sv.hclose) state.hclose=!!sv.hclose; }catch(e){}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify({done:state.done,mask:state.mask,hclose:state.hclose})); }catch(e){} }
 
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 /* 【…】→ マーカー／伏せ字 */
@@ -317,6 +345,33 @@ function rowHTML(r,ctx){
         +(r.m?'<span class="memo">'+kw(r.m)+'</span>':'')+'</span></div>';
   }
 }
+function hdir(cls,label,items){
+  if(!items||!items.length) return "";
+  return '<div class="hrow '+cls+'"><span class="dir">'+label+'</span><div class="hitems">'
+    +items.map(function(it){
+        return '<div class="hitem"><span class="hk" data-go="'+esc(it.to)+'">'+esc(it.head)+'</span>'
+          +'<span class="hw">'+kw(it.v||"")+'</span></div>';
+      }).join("")+'</div></div>';
+}
+function hierHTML(c){
+  var hi=c.hier; if(!hi) return "";
+  var body=(hi.root?'<div class="hroot">'+esc(hi.root)+'</div>':"")
+    + hdir("up","↑ 上位",hi.up)
+    + hdir("sib","→ 兄弟",hi.sib)
+    + hdir("down","↓ 下位",hi.down);
+  var out="";
+  if(body){
+    out+='<div class="hier'+(state.hclose?" closed":"")+'" id="hierBox">'
+      +'<div class="hcap" id="hierCap"><span class="cv">'+(state.hclose?"▸":"▾")+'</span>階層マップ'
+      +'<span class="sp">上位＝属／兄弟＝同じ分類／下位＝定義の入れ子</span></div>'
+      +'<div class="hbody">'+body+'</div></div>';
+  }
+  if(hi.lead&&hi.lead.length){
+    out+='<div class="lead"><div class="lcap">書き出しの型（属 → 位置 → 対象）</div><ol>'
+      +hi.lead.map(function(x){return '<li>'+kw(x)+'</li>';}).join("")+'</ol></div>';
+  }
+  return out;
+}
 function renderBoard(){
   var c=deck[cur]; if(!c) return;
   var h='<div class="bhead"><div class="ch">'+esc(c.part)+'　'+esc(c.ch)+'</div>'
@@ -324,6 +379,7 @@ function renderBoard(){
     +(c.sec?'<div class="secname">'+esc(c.sec)+'</div>':'')
     +((c.tags&&c.tags.length)?'<div class="btags">'+c.tags.map(function(t){return '<button class="tag" data-tag="'+esc(t)+'">'+esc(t)+'</button>';}).join("")+'</div>':'')
     +'</div>';
+  h+=hierHTML(c);
   var ctx={};
   h+=(c.rows||[]).map(function(r){return rowHTML(r,ctx);}).join("");
   if(c.refs&&c.refs.length){
@@ -399,6 +455,11 @@ document.addEventListener("click",function(e){
   var t=e.target;
   var go=t.closest?t.closest("[data-go]"):null;
   if(go){ e.preventDefault(); openById(go.getAttribute("data-go"),true); return; }
+  if(t.closest&&t.closest("#hierCap")){
+    state.hclose=!state.hclose; save();
+    var bx=document.getElementById("hierBox");
+    if(bx){ bx.classList.toggle("closed",state.hclose); var cv=bx.querySelector(".cv"); if(cv) cv.textContent=state.hclose?"▸":"▾"; }
+    return; }
   var tg=t.closest?t.closest("[data-tag]"):null;
   if(tg){ e.preventDefault(); state.tag=tg.getAttribute("data-tag"); renderTagbar(); toIndex(); return; }
   if(state.mask && t.classList && t.classList.contains("kw")) t.classList.toggle("open");
@@ -422,7 +483,15 @@ document.addEventListener("keydown",function(e){
 
 applyMask();
 if(!DATA.length){ $("#list").innerHTML='<div class="emptymsg">データ（youten-data.js）が読み込めませんでした。</div>'; }
-else { renderTagbar(); renderIndex(); }
+else {
+  renderTagbar(); renderIndex();
+  var mh=/^#c=(.+)$/.exec(location.hash||"");
+  if(mh){
+    var cid=decodeURIComponent(mh[1]);
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    openById(cid,false);
+  }
+}
 </script>
 </body>
 </html>

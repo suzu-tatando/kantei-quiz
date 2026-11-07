@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b2a3a">
+<title>鑑定理論 遡上ドリル</title>
+<style>
+:root{
+  --bg:#e9ecef; --board:#fffef9; --ink:#22303d; --sub:#6b7280; --line:#d8d3c6;
+  --accent:#2f5d8a; --red:#c0392b; --blue:#1f6fb2; --green:#2f7a55; --orange:#b4762a;
+  --marker:rgba(255,214,0,.45);
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(30,40,60,.10);
+  --radius:14px; --maxw:860px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0f1319; --board:#1b212a; --ink:#e9e7e2; --sub:#9aa5b4; --line:#2f3845;
+    --accent:#7fb0e0; --red:#ef8279; --blue:#79b6e8; --green:#63c497; --orange:#e0b063;
+    --marker:rgba(255,214,0,.22);
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 22px rgba(0,0,0,.4);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;
+  font-size:16px;line-height:1.85;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));}
+button,select{font-family:inherit;color:inherit}
+header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--board) 94%, transparent);
+  backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hd{max-width:var(--maxw);margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.hd h1{font-size:16px;margin:0;font-weight:700;flex:1}
+.hd .sub{display:block;font-size:11px;color:var(--sub);font-weight:400}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap}
+.iconbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:14px}
+.bar{height:4px;background:var(--line);border-radius:999px;overflow:hidden;margin-bottom:12px}
+.bar i{display:block;height:100%;background:var(--green);width:0}
+
+.modes{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.modes .iconbtn{flex:1;min-width:92px;text-align:center}
+
+.q{background:var(--board);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:18px 16px 20px}
+.qch{font-size:12px;color:var(--sub)}
+.qt{font-size:24px;font-weight:800;color:var(--red);line-height:1.4;margin:4px 0 2px}
+.qsec{font-size:12px;color:var(--accent);font-weight:600}
+.ask{border:2px dashed var(--line);border-radius:12px;padding:12px 13px;margin:16px 0 4px}
+.ask .acap{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.ask ol{margin:0;padding-left:1.3em}
+.ask li{font-size:14.5px;line-height:1.8;margin:4px 0}
+.ask li b{font-weight:800}
+.ask li.u b{color:var(--red)} .ask li.s b{color:var(--orange)} .ask li.d b{color:var(--accent)}
+.timer{font-size:12px;color:var(--sub);text-align:center;margin-top:8px}
+
+.ans{margin-top:16px;border-top:2px solid var(--ink);padding-top:12px}
+.hrow{display:flex;gap:8px;align-items:flex-start;margin:8px 0}
+.hrow .dir{flex:none;width:52px;font-size:11.5px;font-weight:700;line-height:1.5;padding-top:3px}
+.hrow.up .dir{color:var(--red)} .hrow.sib .dir{color:var(--orange)} .hrow.down .dir{color:var(--accent)}
+.hrow .hitems{flex:1;display:flex;flex-direction:column;gap:5px}
+.hitem{display:flex;gap:6px;align-items:flex-start;font-size:14px;line-height:1.65}
+.hitem .hk{flex:none;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;color:var(--accent)}
+.hrow.up .hitem .hk{color:var(--red)} .hrow.sib .hitem .hk{color:var(--orange)}
+.hitem .hw{flex:1}
+.hroot{font-size:12.5px;color:var(--sub)}
+.lead{border-left:4px solid var(--orange);background:color-mix(in srgb,var(--orange) 6%, transparent);
+  border-radius:0 10px 10px 0;padding:8px 11px;margin:14px 0 0}
+.lead .lcap{font-size:11.5px;font-weight:700;color:var(--orange);margin-bottom:3px}
+.lead ol{margin:0;padding-left:1.25em}
+.lead li{font-size:13.5px;line-height:1.75;margin:3px 0}
+.kw{background:linear-gradient(transparent 62%, var(--marker) 62%);font-weight:700;border-radius:2px}
+.golink{margin-top:14px;padding-top:10px;border-top:1px dashed var(--line);font-size:12px}
+.golink a{color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+
+.stats{display:flex;gap:10px;justify-content:center;margin:18px 0 6px;font-size:12px;color:var(--sub);flex-wrap:wrap}
+.stats b{color:var(--ink)}
+.applinks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:22px 0 8px}
+.applinks a{font-size:12px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--board);border-radius:999px;padding:5px 12px}
+.done{text-align:center;padding:40px 10px;color:var(--sub)}
+.done b{display:block;font-size:20px;color:var(--green);margin-bottom:8px}
+
+.fnav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb,var(--board) 95%, transparent);
+  backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+.fnav .in{max-width:var(--maxw);margin:0 auto;display:flex;gap:8px;align-items:center}
+.fnav button{flex:1;padding:13px 8px;border-radius:11px;border:1px solid var(--line);background:var(--board);font-size:14px;font-weight:700;cursor:pointer}
+.fnav button.show{background:var(--accent);border-color:var(--accent);color:#fff}
+.fnav button.ok{background:var(--green);border-color:var(--green);color:#fff}
+.fnav button.mid{background:var(--orange);border-color:var(--orange);color:#fff}
+.fnav button.ng{background:var(--red);border-color:var(--red);color:#fff}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <a class="iconbtn" href="youten.html" style="text-decoration:none">‹ 板書</a>
+    <h1>遡上ドリル<span class="sub" id="hsub">上位（属）・兄弟・下位（入れ子）を30秒で言う</span></h1>
+    <button class="iconbtn" id="resetBtn">リセット</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="modes">
+    <button class="iconbtn on" data-mode="hot">出題率順</button>
+    <button class="iconbtn" data-mode="ch">章順</button>
+    <button class="iconbtn" data-mode="weak">苦手のみ</button>
+    <button class="iconbtn" data-mode="x">横断のみ</button>
+  </div>
+  <div class="bar"><i id="barfill"></i></div>
+  <div id="main"></div>
+  <div class="stats" id="stats"></div>
+  <div class="applinks">
+    <a href="youten.html">章別 要点板書</a><a href="index.html">一問一答</a><a href="checkbook.html">暗記チェックブック</a><a href="ronbun.html">論文チェックブック</a>
+  </div>
+</div>
+
+<div class="fnav hidden" id="fnav">
+  <div class="in" id="navin"></div>
+</div>
+
+<script src="youten-data.js"></script>
+<script>
+var DATA = (window.YOUTEN_DATA||[]).filter(function(c){
+  return c.hier && ((c.hier.up&&c.hier.up.length)||(c.hier.down&&c.hier.down.length)||(c.hier.sib&&c.hier.sib.length)||c.hier.root);
+});
+var $=function(s){return document.querySelector(s)};
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function kw(s){ return esc(s).replace(/【([^】]*)】/g,'<span class="kw">$1</span>'); }
+
+/* 実際の過去問（直近15年 H23-R7・53問）の章別出題回数を重みに使う */
+var W={"総論7":31,"各論1":28,"総論2":27,"総論1":19,"総論3":17,"総論6":14,"総論5":14,"総論4":14,"総論8":13,"各論3":9,"各論2":6,"総論9":3};
+function weightOf(c){
+  if(c.part==="横断") return 26;
+  var m=/^k?(\d+)/.exec(c.id);
+  var key=(c.part==="各論"?"各論":"総論")+(c.id.charAt(0)==="k"?c.id.charAt(1):(m?m[1]:"1"));
+  return W[key]||10;
+}
+
+var LS="sojo_v1";
+var st={res:{}, mode:"hot"};
+try{ var sv=JSON.parse(localStorage.getItem(LS)||"{}"); if(sv&&sv.res) st.res=sv.res; if(sv&&sv.mode) st.mode=sv.mode; }catch(e){}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){} }
+
+var deck=[], pos=0, shown=false, t0=0, tmr=null;
+
+function buildDeck(){
+  var pool=DATA.slice();
+  if(st.mode==="x") pool=pool.filter(function(c){return c.part==="横断";});
+  if(st.mode==="weak") pool=pool.filter(function(c){ var r=st.res[c.id]; return !r || r.last!=="o"; });
+  if(st.mode==="ch"){
+    deck=pool.slice();
+  }else{
+    /* 重み付きシャッフル（キー = -ln(U)/w が小さい順） */
+    deck=pool.map(function(c){ return {c:c,k:-Math.log(Math.random()||1e-9)/weightOf(c)}; })
+             .sort(function(a,b){return a.k-b.k;}).map(function(x){return x.c;});
+  }
+  pos=0; shown=false;
+}
+
+function hdir(cls,label,items){
+  if(!items||!items.length) return "";
+  return '<div class="hrow '+cls+'"><span class="dir">'+label+'</span><div class="hitems">'
+    +items.map(function(it){
+        return '<div class="hitem"><span class="hk">'+esc(it.head)+'</span><span class="hw">'+kw(it.v||"")+'</span></div>';
+      }).join("")+'</div></div>';
+}
+
+function render(){
+  var host=$("#main");
+  if(pos>=deck.length){
+    host.innerHTML='<div class="done"><b>1周おわり</b>モードを変えるか、「苦手のみ」でもう一周してください。</div>';
+    $("#fnav").classList.add("hidden"); $("#barfill").style.width="100%"; renderStats(); return;
+  }
+  var c=deck[pos], hi=c.hier;
+  var h='<div class="q"><div class="qch">'+esc(c.part)+'　'+esc(c.ch)+'</div>'
+    +'<div class="qt">'+esc(c.title)+'</div>'
+    +(c.sec?'<div class="qsec">'+esc(c.sec)+'</div>':'')
+    +'<div class="ask"><div class="acap">口に出して言う（30秒）</div><ol>'
+    +'<li class="u"><b>↑ 上位（属）</b>　これは何の一種か／どの条文の下にあるか</li>'
+    +'<li class="s"><b>→ 兄弟</b>　同じ分類に並ぶものは何か</li>'
+    +'<li class="d"><b>↓ 下位（入れ子）</b>　この定義の中で、さらに定義が要る語は何か</li>'
+    +'</ol><div class="timer" id="tm">—</div></div>';
+  if(shown){
+    h+='<div class="ans">'
+      +(hi.root?'<div class="hroot">'+esc(hi.root)+'</div>':"")
+      +hdir("up","↑ 上位",hi.up)+hdir("sib","→ 兄弟",hi.sib)+hdir("down","↓ 下位",hi.down);
+    if(hi.lead&&hi.lead.length){
+      h+='<div class="lead"><div class="lcap">書き出しの型（属 → 位置 → 対象）</div><ol>'
+        +hi.lead.map(function(x){return '<li>'+kw(x)+'</li>';}).join("")+'</ol></div>';
+    }
+    h+='<div class="golink"><a href="youten.html#c='+encodeURIComponent(c.id)+'">この板書を開く ›</a></div>';
+    h+='</div>';
+  }
+  h+='</div>';
+  host.innerHTML=h;
+  $("#barfill").style.width=Math.round(100*pos/Math.max(1,deck.length))+"%";
+  renderNav(); renderStats(); startTimer();
+  window.scrollTo(0,0);
+}
+function startTimer(){
+  if(tmr) clearInterval(tmr);
+  if(shown){ var e=$("#tm"); if(e) e.textContent="—"; return; }
+  t0=Date.now();
+  tmr=setInterval(function(){
+    var e=$("#tm"); if(!e){ clearInterval(tmr); return; }
+    var s=Math.floor((Date.now()-t0)/1000);
+    e.textContent=s+" 秒"+(s>=30?"　（時間切れ。答えを見て次へ）":"");
+    e.style.color = s>=30 ? "var(--red)" : "";
+  },1000);
+}
+function renderNav(){
+  var n=$("#navin"); $("#fnav").classList.remove("hidden");
+  if(!shown){
+    n.innerHTML='<button id="skip">スキップ</button><button id="show" class="show">答えを見る</button>';
+    $("#show").onclick=function(){ shown=true; render(); };
+    $("#skip").onclick=function(){ grade(null); };
+  }else{
+    n.innerHTML='<button class="ng" data-g="x">× 言えず</button><button class="mid" data-g="m">△ あやしい</button><button class="ok" data-g="o">○ 言えた</button>';
+    [].forEach.call(n.querySelectorAll("[data-g]"),function(b){ b.onclick=function(){ grade(b.getAttribute("data-g")); }; });
+  }
+}
+function grade(g){
+  var c=deck[pos];
+  if(g){
+    var r=st.res[c.id]||{o:0,m:0,x:0};
+    r[g==="o"?"o":(g==="m"?"m":"x")]++;
+    r.last=g; r.t=Date.now();
+    st.res[c.id]=r; save();
+    if(g!=="o"){ deck.push(c); }   /* △× は末尾に戻す */
+  }
+  pos++; shown=false; render();
+}
+function renderStats(){
+  var ids=Object.keys(st.res), o=0, tot=0;
+  ids.forEach(function(k){ var r=st.res[k]; o+=r.o||0; tot+=(r.o||0)+(r.m||0)+(r.x||0); });
+  var okNow=ids.filter(function(k){return st.res[k].last==="o";}).length;
+  $("#stats").innerHTML='出題対象 <b>'+DATA.length+'</b> 枚　／　直近○ <b>'+okNow+'</b> 枚　／　のべ <b>'+tot+'</b> 回（○ '+(tot?Math.round(100*o/tot):0)+'%）'
+    +'　／　残り <b>'+Math.max(0,deck.length-pos)+'</b>';
+}
+
+[].forEach.call(document.querySelectorAll("[data-mode]"),function(b){
+  b.onclick=function(){
+    st.mode=b.getAttribute("data-mode"); save();
+    [].forEach.call(document.querySelectorAll("[data-mode]"),function(x){x.classList.toggle("on",x===b);});
+    buildDeck();
+    if(!deck.length){ $("#main").innerHTML='<div class="done"><b>対象なし</b>このモードに該当する板書がありません。</div>'; $("#fnav").classList.add("hidden"); renderStats(); return; }
+    render();
+  };
+  if(b.getAttribute("data-mode")===st.mode){ [].forEach.call(document.querySelectorAll("[data-mode]"),function(x){x.classList.remove("on");}); b.classList.add("on"); }
+});
+$("#resetBtn").onclick=function(){
+  if(!confirm("成績をすべて消して最初からやり直しますか？")) return;
+  st.res={}; save(); buildDeck(); render();
+};
+document.addEventListener("keydown",function(e){
+  if(e.key===" "||e.key==="Enter"){ e.preventDefault(); if(!shown){shown=true;render();} return; }
+  if(shown){ if(e.key==="1") grade("x"); if(e.key==="2") grade("m"); if(e.key==="3") grade("o"); }
+});
+
+if(!DATA.length){ $("#main").innerHTML='<div class="done">データ（youten-data.js）が読み込めませんでした。</div>'; }
+else { buildDeck(); render(); }
+</script>
+</body>
+</html>
