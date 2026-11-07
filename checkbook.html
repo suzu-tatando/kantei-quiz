@@ -168,6 +168,16 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{display:inline-block;width:26px;height:0;border-top:2px solid var(--accent)}
 .legend i.dd{border-top:2px dashed var(--accent2)}
+/* 要点板書へのリンク */
+.ylink{display:flex;gap:7px;flex-wrap:wrap;align-items:center;
+  margin-top:12px;padding-top:10px;border-top:1px dashed var(--line);
+  font-size:11px;color:var(--sub);font-family:-apple-system,sans-serif}
+.ylink .yl{display:inline-flex;align-items:center;gap:5px;text-decoration:none;
+  border:1px solid var(--line);border-radius:999px;padding:3px 11px;
+  font-size:12px;font-weight:600;color:var(--accent);background:var(--panel);max-width:100%}
+.ylink .yl:active{opacity:.6}
+.ylink .yl .ych{font-weight:400;color:var(--sub);font-size:11px}
+.ylink .yl .yar{font-weight:700}
 
 /* ---------- result ---------- */
 .result{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
@@ -346,6 +356,7 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
         <span><i></i>基準</span>
         <span><i class="dd"></i>留意事項</span>
       </div>
+      <div class="ylink hidden" id="st-ylink"></div>
       <div class="judge hidden" id="st-judge">
         <button class="jo" data-ok="1">○ 正解</button>
         <button class="jx" data-ok="0">✕ 間違えた</button>
@@ -383,6 +394,7 @@ body.nolines u.s,body.nolines u.d{text-decoration-line:none}
   </div>
 </div>
 
+<script src="youten-map.js"></script>
 <script src="checkbook-data.js"></script>
 <script>
 (function(){
@@ -560,15 +572,30 @@ function renderCard(){
   $("#st-dots").innerHTML=dotsHtml(c.id);
   $("#st-q").textContent=c.title;
   $("#st-a").innerHTML=c.body;
+  renderYlink(c.id);
   hideAnswer();
   $("#prev").disabled=$("#prev2").disabled = pos===0;
   $("#next").disabled=$("#next2").disabled = pos===deck.length-1;
   highlightRow(c.id);
   window.scrollTo(0,0);
 }
+function escY(x){ return String(x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+/* この設問に対応する「章別 要点板書」へのリンク */
+function renderYlink(qid){
+  var box=$("#st-ylink"); if(!box) return;
+  var map=(window.YOUTEN_MAP&&window.YOUTEN_MAP.q)||{};
+  var list=map[qid]||[];
+  if(!list.length){ box.innerHTML=""; box.dataset.empty="1"; return; }
+  box.dataset.empty="";
+  box.innerHTML='<span>要点板書：</span>'+list.map(function(e){
+    return '<a class="yl" href="youten.html#c='+encodeURIComponent(e.id)+'">'
+      +escY(e.t)+'<span class="ych">'+escY(e.ch)+'</span><span class="yar">›</span></a>';
+  }).join("");
+}
 function reveal(){
   $("#st-a").classList.remove("hidden");
   $("#st-legend").classList.remove("hidden");
+  if(!$("#st-ylink").dataset.empty) $("#st-ylink").classList.remove("hidden");
   $("#st-judge").classList.remove("hidden");
   $("#st-tap").classList.add("hidden");
   $("#fn-pre").classList.add("hidden");
@@ -577,6 +604,7 @@ function reveal(){
 function hideAnswer(){
   $("#st-a").className="abox hidden";
   $("#st-legend").className="legend hidden";
+  $("#st-ylink").classList.add("hidden");
   $("#st-judge").className="judge hidden";
   $("#st-tap").classList.remove("hidden");
   $("#fn-pre").classList.remove("hidden");
