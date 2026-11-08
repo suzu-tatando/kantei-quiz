@@ -58,6 +58,8 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 .srcchip{display:inline-block;font-size:10.5px;border-radius:999px;padding:1px 9px;margin-left:8px;vertical-align:middle;
   border:1px solid var(--accent);color:var(--accent);font-weight:700}
 .srcchip.r{border-color:var(--orange);color:var(--orange)}
+.srcchip.n{border-color:var(--sub);color:var(--sub)}
+.tbtn.n .s{color:var(--sub)}
 .tap{width:100%;margin:14px 0 0;padding:16px;border:2px dashed var(--line);border-radius:12px;
   background:none;color:var(--sub);font-size:13.5px;cursor:pointer}
 .def{font-size:16px;line-height:2.0;margin-top:14px;border-top:2px solid var(--ink);padding-top:12px}
@@ -148,6 +150,11 @@ var T=window.TEIGI_DATA||[];
 var $=function(s){return document.querySelector(s)};
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 var BY={}; T.forEach(function(e){ BY[e.k]=e; });
+function srcCls(x){ return x==="留意事項"?"r":(x==="解説"?"n":""); }
+function srcTag(x){ return x==="留意事項"?"留":(x==="解説"?"解":""); }
+function srcNote(x){ return x==="基準"?"不動産鑑定評価基準（原文どおり）"
+  :(x==="留意事項"?"不動産鑑定評価基準運用上の留意事項（原文どおり）"
+  :"基準・留意事項の記述をもとにした整理（原文そのままではない）"); }
 /* 逆引き：この語を定義の中で使っている語 */
 var USEDBY={};
 T.forEach(function(e){ (e.n||[]).forEach(function(o){ (USEDBY[o]=USEDBY[o]||[]).push(e.k); }); });
@@ -181,8 +188,9 @@ function renderList(){
   host.innerHTML=Object.keys(g).sort(function(a,b){return chOrder(a)-chOrder(b);}).map(function(c){
     return '<div class="chgroup"><div class="chname">'+esc(c)+'　'+g[c].length+'語</div><div class="tlist">'
       +g[c].map(function(e){
-         return '<button class="tbtn'+(e.src==="留意事項"?" r":"")+'" data-k="'+esc(e.k)+'">'+esc(e.k)
-           +(e.src==="留意事項"?'<span class="s">留</span>':'')+'</button>';
+         var cl=srcCls(e.src), tg=srcTag(e.src);
+         return '<button class="tbtn'+(cl?" "+cl:"")+'" data-k="'+esc(e.k)+'">'+esc(e.k)
+           +(tg?'<span class="s">'+tg+'</span>':'')+'</button>';
        }).join("")+'</div></div>';
   }).join("");
   $("#fnav").classList.add("hidden");
@@ -230,7 +238,7 @@ function renderTerm(){
   $("#crumb").innerHTML=path.map(function(x,i){
     return (i?'<span class="sep">›</span>':'')+'<button data-cr="'+i+'">'+esc(x)+'</button>';
   }).join("");
-  var h='<div class="k">'+esc(e.k)+'<span class="srcchip'+(e.src==="留意事項"?" r":"")+'">'+esc(e.src)+'</span></div>';
+  var h='<div class="k">'+esc(e.k)+'<span class="srcchip '+srcCls(e.src)+'">'+esc(e.src)+'</span></div>';
   if(!revealed){
     h+='<button class="tap" id="rev">定義を声に出して言ってから、タップして確認</button>';
   }else{
@@ -247,7 +255,7 @@ function renderTerm(){
     if(e.card) ls.push('<a href="youten.html#c='+encodeURIComponent(e.card)+'">要点板書で見る</a>');
     if(e.q) ls.push('<a href="checkbook.html#q='+encodeURIComponent(e.q)+'">暗記チェックブック '+esc(e.q)+'</a>');
     if(ls.length) h+='<div class="links">'+ls.join("")+'</div>';
-    h+='<div class="note">出典：'+(e.src==="基準"?"不動産鑑定評価基準":"不動産鑑定評価基準運用上の留意事項")+'（原文どおり）</div>';
+    h+='<div class="note">出典：'+srcNote(e.src)+'</div>';
   }
   $("#card").innerHTML=h;
   if(!revealed){ $("#rev").onclick=function(){ revealed=true; renderTerm(); }; }
@@ -316,12 +324,12 @@ function renderQuiz(){
   var e=deck[qpos];
   var h='<div class="qcard"><div class="qch">'+esc(chOf(e))+'</div>';
   if(st.qdir==="kd"){
-    h+='<div class="qk">'+esc(e.k)+'<span class="srcchip'+(e.src==="留意事項"?" r":"")+'">'+esc(e.src)+'</span></div>'
+    h+='<div class="qk">'+esc(e.k)+'<span class="srcchip '+srcCls(e.src)+'">'+esc(e.src)+'</span></div>'
       +'<div class="ask">定義を声に出して言う</div>';
     if(qshown) h+='<div class="ansbox"><div class="ad">'+esc(e.d)+'</div></div>';
   }else{
     h+='<div class="qd">'+esc(e.d)+'</div><div class="ask">この定義の用語は？</div>';
-    if(qshown) h+='<div class="ansbox"><div class="ak">'+esc(e.k)+'<span class="srcchip'+(e.src==="留意事項"?" r":"")+'">'+esc(e.src)+'</span></div></div>';
+    if(qshown) h+='<div class="ansbox"><div class="ak">'+esc(e.k)+'<span class="srcchip '+srcCls(e.src)+'">'+esc(e.src)+'</span></div></div>';
   }
   if(qshown){
     h+='<div class="links">'
