@@ -351,7 +351,7 @@ function qnav(){
     $("#qshow").onclick=function(){ qshown=true; renderQuiz(); };
     $("#qskip").onclick=function(){ qgrade(null); };
   }else{
-    n.innerHTML='<button class="ng" data-qg="x">× 言えず</button><button class="mid" data-qg="m">△ あやしい</button><button class="ok" data-qg="o">○ 言えた</button>';
+    n.innerHTML='<button class="ok" data-qg="o">○ 言えた</button><button class="mid" data-qg="m">△ あやしい</button><button class="ng" data-qg="x">× 言えず</button>';
   }
 }
 function qgrade(g){

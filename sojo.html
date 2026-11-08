@@ -217,7 +217,7 @@ function renderNav(){
     $("#show").onclick=function(){ shown=true; render(); };
     $("#skip").onclick=function(){ grade(null); };
   }else{
-    n.innerHTML='<button class="ng" data-g="x">× 言えず</button><button class="mid" data-g="m">△ あやしい</button><button class="ok" data-g="o">○ 言えた</button>';
+    n.innerHTML='<button class="ok" data-g="o">○ 言えた</button><button class="mid" data-g="m">△ あやしい</button><button class="ng" data-g="x">× 言えず</button>';
     [].forEach.call(n.querySelectorAll("[data-g]"),function(b){ b.onclick=function(){ grade(b.getAttribute("data-g")); }; });
   }
 }
@@ -256,7 +256,7 @@ $("#resetBtn").onclick=function(){
 };
 document.addEventListener("keydown",function(e){
   if(e.key===" "||e.key==="Enter"){ e.preventDefault(); if(!shown){shown=true;render();} return; }
-  if(shown){ if(e.key==="1") grade("x"); if(e.key==="2") grade("m"); if(e.key==="3") grade("o"); }
+  if(shown){ if(e.key==="1"||e.key==="x") grade("x"); if(e.key==="2") grade("m"); if(e.key==="3"||e.key==="o") grade("o"); }
 });
 
 if(!DATA.length){ $("#main").innerHTML='<div class="done">データ（youten-data.js）が読み込めませんでした。</div>'; }
