@@ -74,6 +74,29 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 .links a{font-size:12px;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:3px 11px;background:var(--panel)}
 .note{font-size:12px;color:var(--sub);line-height:1.7;margin-top:12px}
 
+/* 一問一答モード */
+.qbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.qbar button{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:5px 11px;font-size:12px;cursor:pointer;color:inherit}
+.qbar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.qbar .sepline{flex-basis:100%;height:0}
+.bar{height:4px;background:var(--line);border-radius:999px;overflow:hidden;margin:4px 0 12px}
+.bar i{display:block;height:100%;background:var(--green);width:0}
+.qcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px 16px 22px;text-align:center}
+.qcard .qch{font-size:11.5px;color:var(--sub)}
+.qcard .qk{font-size:26px;font-weight:800;color:var(--red);line-height:1.4;margin:6px 0 2px}
+.qcard .qd{font-size:16.5px;line-height:1.95;text-align:left;margin:8px 0 2px}
+.qcard .ask{font-size:12.5px;color:var(--sub);margin-top:10px}
+.qcard .ansbox{margin-top:14px;border-top:2px solid var(--ink);padding-top:12px;text-align:left}
+.qcard .ansbox .ak{font-size:22px;font-weight:800;color:var(--red);line-height:1.4}
+.qcard .ansbox .ad{font-size:16px;line-height:1.95}
+.qcard .srcchip{margin-left:6px}
+.qstat{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0 4px;font-size:12px;color:var(--sub)}
+.qstat b{color:var(--ink)}
+.qdone{text-align:center;padding:38px 10px;color:var(--sub)}
+.qdone b{display:block;font-size:20px;color:var(--green);margin-bottom:8px}
+.fnav button.ok{background:var(--green);border-color:var(--green);color:#fff}
+.fnav button.mid{background:var(--orange);border-color:var(--orange);color:#fff}
+.fnav button.ng{background:var(--red);border-color:var(--red);color:#fff}
 .applinks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:22px 0 8px}
 .applinks a{font-size:12px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
 .fnav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb,var(--panel) 95%, transparent);
@@ -89,6 +112,7 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
     <button class="iconbtn hidden" id="back">‹ 戻る</button>
     <a class="iconbtn" id="home" href="youten.html">‹ 板書</a>
     <h1>定義の入れ子<span class="sub" id="hsub">定義の中の「さらに定義が要る語」をたどる</span></h1>
+    <button class="iconbtn" id="quizBtn">一問一答</button>
     <button class="iconbtn on" id="maskBtn">伏せる</button>
   </div>
 </header>
@@ -100,6 +124,14 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
     <div class="applinks">
       <a href="youten.html">章別 要点板書</a><a href="sojo.html">遡上ドリル</a><a href="kousei.html">答案構成チェック</a><a href="checkbook.html">暗記チェックブック</a><a href="index.html">一問一答</a>
     </div>
+  </section>
+  <section id="v-quiz" class="hidden">
+    <div class="qbar" id="qdir"></div>
+    <div class="qbar" id="qscope"></div>
+    <div class="qbar" id="qch"></div>
+    <div class="bar"><i id="qfill"></i></div>
+    <div id="qbody"></div>
+    <div class="qstat" id="qstat"></div>
   </section>
   <section id="v-term" class="hidden">
     <div class="crumb" id="crumb"></div>
@@ -121,8 +153,10 @@ var USEDBY={};
 T.forEach(function(e){ (e.n||[]).forEach(function(o){ (USEDBY[o]=USEDBY[o]||[]).push(e.k); }); });
 
 var LS="teigi_v1";
-var st={mask:true};
-try{ var sv=JSON.parse(localStorage.getItem(LS)||"{}"); if(typeof sv.mask==="boolean") st.mask=sv.mask; }catch(e){}
+var st={mask:true, res:{}, qdir:"kd", qscope:"all", qch:null};
+try{ var sv=JSON.parse(localStorage.getItem(LS)||"{}"); if(typeof sv.mask==="boolean") st.mask=sv.mask;
+  if(sv.res) st.res=sv.res; if(sv.qdir) st.qdir=sv.qdir; if(sv.qscope) st.qscope=sv.qscope; if(sv.qch) st.qch=sv.qch;
+}catch(e){}
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){} }
 
 /* 章ラベル（板書カードIDから） */
@@ -164,6 +198,7 @@ function openTerm(k,push){
   else { path.push(k); }
   revealed=!st.mask;
   $("#v-list").classList.add("hidden");
+  $("#v-quiz").classList.add("hidden");
   $("#v-term").classList.remove("hidden");
   $("#back").classList.remove("hidden");
   $("#home").classList.add("hidden");
@@ -225,12 +260,120 @@ function renderTerm(){
 function toList(){
   path=[];
   $("#v-term").classList.add("hidden");
+  $("#v-quiz").classList.add("hidden");
   $("#v-list").classList.remove("hidden");
+  $("#quizBtn").classList.remove("on");
   renderList(); window.scrollTo(0,0);
+}
+
+/* ================= 一問一答モード ================= */
+var deck=[], qpos=0, qshown=false;
+function chList(){
+  var s={}; T.forEach(function(e){ var c=chOf(e); s[c]=(s[c]||0)+1; });
+  return Object.keys(s).sort(function(a,b){return chOrder(a)-chOrder(b);}).map(function(k){return [k,s[k]];});
+}
+function qpool(){
+  var p=T.slice();
+  if(st.qch) p=p.filter(function(e){ return chOf(e)===st.qch; });
+  if(st.qscope==="weak") p=p.filter(function(e){ var r=st.res[e.k]; return !r || r.last!=="o"; });
+  if(st.qscope==="new")  p=p.filter(function(e){ return !st.res[e.k]; });
+  return p;
+}
+function buildDeck(){
+  deck=qpool().map(function(e){return {e:e,r:Math.random()};}).sort(function(a,b){return a.r-b.r;}).map(function(x){return x.e;});
+  qpos=0; qshown=false;
+}
+function toQuiz(rebuild){
+  $("#v-list").classList.add("hidden");
+  $("#v-term").classList.add("hidden");
+  $("#v-quiz").classList.remove("hidden");
+  $("#back").classList.add("hidden");
+  $("#home").classList.remove("hidden");
+  $("#quizBtn").classList.add("on");
+  if(rebuild!==false) buildDeck();
+  renderQuiz(); window.scrollTo(0,0);
+}
+function qctl(){
+  $("#qdir").innerHTML='<button data-qd="kd"'+(st.qdir==="kd"?' class="on"':'')+'>用語 → 定義</button>'
+    +'<button data-qd="dk"'+(st.qdir==="dk"?' class="on"':'')+'>定義 → 用語</button>';
+  var sc=[["all","すべて"],["weak","苦手のみ"],["new","未着手のみ"]];
+  $("#qscope").innerHTML=sc.map(function(x){
+    return '<button data-qs="'+x[0]+'"'+(st.qscope===x[0]?' class="on"':'')+'>'+x[1]+'</button>';
+  }).join("")+'<button id="qreset">記録リセット</button>';
+  $("#qch").innerHTML='<button data-qc=""'+(st.qch?'':' class="on"')+'>章で絞らない</button>'
+    +chList().map(function(p){
+       return '<button data-qc="'+esc(p[0])+'"'+(st.qch===p[0]?' class="on"':'')+'>'+esc(p[0])+' '+p[1]+'</button>';
+     }).join("");
+}
+function renderQuiz(){
+  qctl();
+  var host=$("#qbody");
+  if(qpos>=deck.length){
+    host.innerHTML='<div class="qdone"><b>'+(deck.length?"1周おわり":"対象なし")+'</b>'
+      +(deck.length?'範囲を変えるか、「苦手のみ」でもう一周してください。':'この範囲に用語がありません。')+'</div>';
+    $("#qfill").style.width="100%"; $("#fnav").classList.add("hidden"); qstat(); return;
+  }
+  var e=deck[qpos];
+  var h='<div class="qcard"><div class="qch">'+esc(chOf(e))+'</div>';
+  if(st.qdir==="kd"){
+    h+='<div class="qk">'+esc(e.k)+'<span class="srcchip'+(e.src==="留意事項"?" r":"")+'">'+esc(e.src)+'</span></div>'
+      +'<div class="ask">定義を声に出して言う</div>';
+    if(qshown) h+='<div class="ansbox"><div class="ad">'+esc(e.d)+'</div></div>';
+  }else{
+    h+='<div class="qd">'+esc(e.d)+'</div><div class="ask">この定義の用語は？</div>';
+    if(qshown) h+='<div class="ansbox"><div class="ak">'+esc(e.k)+'<span class="srcchip'+(e.src==="留意事項"?" r":"")+'">'+esc(e.src)+'</span></div></div>';
+  }
+  if(qshown){
+    h+='<div class="links">'
+      +'<a href="#" id="qnest">定義の入れ子で開く ›</a>'
+      +(e.card?'<a href="youten.html#c='+encodeURIComponent(e.card)+'">要点板書</a>':'')
+      +(e.q?'<a href="checkbook.html#q='+encodeURIComponent(e.q)+'">'+esc(e.q)+'</a>':'')
+      +'</div>';
+  }
+  h+='</div>';
+  host.innerHTML=h;
+  $("#qfill").style.width=Math.round(100*qpos/Math.max(1,deck.length))+"%";
+  var nz=$("#qnest"); if(nz) nz.onclick=function(ev){ ev.preventDefault(); openTerm(e.k); };
+  qnav(); qstat();
+}
+function qnav(){
+  var n=$("#navin"); $("#fnav").classList.remove("hidden");
+  if(!qshown){
+    n.innerHTML='<button id="qskip">スキップ</button><button id="qshow" class="prim">答えを見る</button>';
+    $("#qshow").onclick=function(){ qshown=true; renderQuiz(); };
+    $("#qskip").onclick=function(){ qgrade(null); };
+  }else{
+    n.innerHTML='<button class="ng" data-qg="x">× 言えず</button><button class="mid" data-qg="m">△ あやしい</button><button class="ok" data-qg="o">○ 言えた</button>';
+  }
+}
+function qgrade(g){
+  var e=deck[qpos];
+  if(g&&e){
+    var r=st.res[e.k]||{o:0,m:0,x:0};
+    r[g]=(r[g]||0)+1; r.last=g; r.t=Date.now();
+    st.res[e.k]=r; save();
+    if(g!=="o") deck.push(e);
+  }
+  qpos++; qshown=false; renderQuiz(); window.scrollTo(0,0);
+}
+function qstat(){
+  var ids=Object.keys(st.res), o=0, tot=0;
+  ids.forEach(function(k){ var r=st.res[k]; o+=r.o||0; tot+=(r.o||0)+(r.m||0)+(r.x||0); });
+  var ok=ids.filter(function(k){return st.res[k].last==="o";}).length;
+  $("#qstat").innerHTML='出題 <b>'+deck.length+'</b> 語　／　直近○ <b>'+ok+'</b> 語　／　のべ <b>'+tot+'</b> 回（○ '+(tot?Math.round(100*o/tot):0)+'%）　／　残り <b>'+Math.max(0,deck.length-qpos)+'</b>';
 }
 
 document.addEventListener("click",function(ev){
   var t=ev.target;
+  var qd=t.closest&&t.closest("[data-qd]");
+  if(qd){ st.qdir=qd.getAttribute("data-qd"); save(); qshown=false; renderQuiz(); return; }
+  var qs=t.closest&&t.closest("[data-qs]");
+  if(qs){ st.qscope=qs.getAttribute("data-qs"); save(); toQuiz(); return; }
+  var qc=t.closest&&t.closest("[data-qc]");
+  if(qc){ var v=qc.getAttribute("data-qc"); st.qch=v||null; save(); toQuiz(); return; }
+  if(t.id==="qreset"){ if(confirm("一問一答の成績をすべて消しますか？")){ st.res={}; save(); toQuiz(); } return; }
+  var qg=t.closest&&t.closest("[data-qg]");
+  if(qg){ qgrade(qg.getAttribute("data-qg")); return; }
   var cr=t.closest&&t.closest("[data-cr]");
   if(cr){ path=path.slice(0,+cr.getAttribute("data-cr")+1); revealed=!st.mask; renderTerm(); window.scrollTo(0,0); return; }
   var b=t.closest&&t.closest("[data-k]");
@@ -246,6 +389,9 @@ $("#maskBtn").onclick=function(){
   this.classList.toggle("on",st.mask);
   this.textContent=st.mask?"伏せる":"そのまま";
   if(path.length){ revealed=!st.mask; renderTerm(); }
+};
+$("#quizBtn").onclick=function(){
+  if($("#v-quiz").classList.contains("hidden")) toQuiz(); else toList();
 };
 $("#maskBtn").classList.toggle("on",st.mask);
 $("#maskBtn").textContent=st.mask?"伏せる":"そのまま";
