@@ -59,6 +59,15 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
   border:1px solid var(--accent);color:var(--accent);font-weight:700}
 .srcchip.r{border-color:var(--orange);color:var(--orange)}
 .srcchip.n{border-color:var(--sub);color:var(--sub)}
+.lvchip{display:inline-block;font-size:10px;border-radius:999px;padding:1px 8px;margin-left:6px;vertical-align:middle;font-weight:700}
+.lvchip.A{background:var(--red);color:#fff}
+.lvchip.B{border:1px solid var(--accent);color:var(--accent)}
+.lvchip.C{border:1px solid var(--sub);color:var(--sub)}
+.tbtn .lv{font-size:10px;margin-left:5px;font-weight:700}
+.tbtn .lv.A{color:var(--red)} .tbtn .lv.C{color:var(--sub)}
+.filterbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.filterbar button{border:1px solid var(--line);background:var(--panel);border-radius:9px;padding:5px 11px;font-size:12px;cursor:pointer;color:inherit}
+.filterbar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .tbtn.n .s{color:var(--sub)}
 .tap{width:100%;margin:14px 0 0;padding:16px;border:2px dashed var(--line);border-radius:12px;
   background:none;color:var(--sub);font-size:13.5px;cursor:pointer}
@@ -122,12 +131,14 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 <div class="wrap">
   <section id="v-list">
     <div class="tools"><input id="q" type="search" placeholder="用語を検索（例：正常価格、同一需給圏）"></div>
+    <div class="filterbar" id="lvbar"></div>
     <div id="list"></div>
     <div class="applinks">
       <a href="youten.html">章別 要点板書</a><a href="sojo.html">遡上ドリル</a><a href="kousei.html">答案構成チェック</a><a href="checkbook.html">暗記チェックブック</a><a href="index.html">一問一答</a>
     </div>
   </section>
   <section id="v-quiz" class="hidden">
+    <div class="qbar" id="qlv"></div>
     <div class="qbar" id="qdir"></div>
     <div class="qbar" id="qscope"></div>
     <div class="qbar" id="qch"></div>
@@ -150,6 +161,8 @@ var T=window.TEIGI_DATA||[];
 var $=function(s){return document.querySelector(s)};
 function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 var BY={}; T.forEach(function(e){ BY[e.k]=e; });
+var LVNAME={A:"必須",B:"重要",C:"参考"};
+function lvTag(x){ return x==="A"?"必":(x==="C"?"参":""); }
 function srcCls(x){ return x==="留意事項"?"r":(x==="解説"?"n":""); }
 function srcTag(x){ return x==="留意事項"?"留":(x==="解説"?"解":""); }
 function srcNote(x){ return x==="基準"?"不動産鑑定評価基準（原文どおり）"
@@ -160,9 +173,10 @@ var USEDBY={};
 T.forEach(function(e){ (e.n||[]).forEach(function(o){ (USEDBY[o]=USEDBY[o]||[]).push(e.k); }); });
 
 var LS="teigi_v1";
-var st={mask:true, res:{}, qdir:"kd", qscope:"all", qch:null};
+var st={mask:true, res:{}, qdir:"kd", qscope:"all", qch:null, qlv:"AB", lvf:"all"};
 try{ var sv=JSON.parse(localStorage.getItem(LS)||"{}"); if(typeof sv.mask==="boolean") st.mask=sv.mask;
   if(sv.res) st.res=sv.res; if(sv.qdir) st.qdir=sv.qdir; if(sv.qscope) st.qscope=sv.qscope; if(sv.qch) st.qch=sv.qch;
+  if(sv.qlv) st.qlv=sv.qlv; if(sv.lvf) st.lvf=sv.lvf;
 }catch(e){}
 function save(){ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){} }
 
@@ -180,7 +194,12 @@ function chOrder(s){
 }
 function renderList(){
   var kw=($("#q").value||"").trim();
-  var items=T.filter(function(e){ return !kw || e.k.indexOf(kw)>=0 || e.d.indexOf(kw)>=0; });
+  var items=T.filter(function(e){
+    if(st.lvf!=="all" && (e.lv||"B")!==st.lvf) return false;
+    return !kw || e.k.indexOf(kw)>=0 || e.d.indexOf(kw)>=0; });
+  var cl={A:0,B:0,C:0}; T.forEach(function(e){ cl[e.lv||"B"]++; });
+  $("#lvbar").innerHTML=[["all","すべて "+T.length],["A","必須 "+cl.A],["B","重要 "+cl.B],["C","参考 "+cl.C]]
+    .map(function(x){ return '<button data-lvf="'+x[0]+'"'+(st.lvf===x[0]?' class="on"':'')+'>'+x[1]+'</button>'; }).join("");
   var host=$("#list");
   if(!items.length){ host.innerHTML='<div class="emptymsg">該当する用語はありません。</div>'; return; }
   var g={};
@@ -188,8 +207,9 @@ function renderList(){
   host.innerHTML=Object.keys(g).sort(function(a,b){return chOrder(a)-chOrder(b);}).map(function(c){
     return '<div class="chgroup"><div class="chname">'+esc(c)+'　'+g[c].length+'語</div><div class="tlist">'
       +g[c].map(function(e){
-         var cl=srcCls(e.src), tg=srcTag(e.src);
+         var cl=srcCls(e.src), tg=srcTag(e.src), lt=lvTag(e.lv);
          return '<button class="tbtn'+(cl?" "+cl:"")+'" data-k="'+esc(e.k)+'">'+esc(e.k)
+           +(lt?'<span class="lv '+(e.lv)+'">'+lt+'</span>':'')
            +(tg?'<span class="s">'+tg+'</span>':'')+'</button>';
        }).join("")+'</div></div>';
   }).join("");
@@ -238,7 +258,8 @@ function renderTerm(){
   $("#crumb").innerHTML=path.map(function(x,i){
     return (i?'<span class="sep">›</span>':'')+'<button data-cr="'+i+'">'+esc(x)+'</button>';
   }).join("");
-  var h='<div class="k">'+esc(e.k)+'<span class="srcchip '+srcCls(e.src)+'">'+esc(e.src)+'</span></div>';
+  var h='<div class="k">'+esc(e.k)+'<span class="lvchip '+(e.lv||"B")+'">'+LVNAME[e.lv||"B"]+'</span>'
+    +'<span class="srcchip '+srcCls(e.src)+'">'+esc(e.src)+'</span></div>';
   if(!revealed){
     h+='<button class="tap" id="rev">定義を声に出して言ってから、タップして確認</button>';
   }else{
@@ -276,12 +297,13 @@ function toList(){
 
 /* ================= 一問一答モード ================= */
 var deck=[], qpos=0, qshown=false;
+function inLv(e){ var l=e.lv||"B"; return st.qlv==="all"?true:(st.qlv==="A"?l==="A":l!=="C"); }
 function chList(){
-  var s={}; T.forEach(function(e){ var c=chOf(e); s[c]=(s[c]||0)+1; });
+  var s={}; T.filter(inLv).forEach(function(e){ var c=chOf(e); s[c]=(s[c]||0)+1; });
   return Object.keys(s).sort(function(a,b){return chOrder(a)-chOrder(b);}).map(function(k){return [k,s[k]];});
 }
 function qpool(){
-  var p=T.slice();
+  var p=T.filter(inLv);
   if(st.qch) p=p.filter(function(e){ return chOf(e)===st.qch; });
   if(st.qscope==="weak") p=p.filter(function(e){ var r=st.res[e.k]; return !r || r.last!=="o"; });
   if(st.qscope==="new")  p=p.filter(function(e){ return !st.res[e.k]; });
@@ -302,6 +324,9 @@ function toQuiz(rebuild){
   renderQuiz(); window.scrollTo(0,0);
 }
 function qctl(){
+  var cl={A:0,B:0,C:0}; T.forEach(function(e){ cl[e.lv||"B"]++; });
+  $("#qlv").innerHTML=[["A","必須のみ "+cl.A],["AB","必須＋重要 "+(cl.A+cl.B)],["all","すべて "+T.length]]
+    .map(function(x){ return '<button data-qlv="'+x[0]+'"'+(st.qlv===x[0]?' class="on"':'')+'>'+x[1]+'</button>'; }).join("");
   $("#qdir").innerHTML='<button data-qd="kd"'+(st.qdir==="kd"?' class="on"':'')+'>用語 → 定義</button>'
     +'<button data-qd="dk"'+(st.qdir==="dk"?' class="on"':'')+'>定義 → 用語</button>';
   var sc=[["all","すべて"],["weak","苦手のみ"],["new","未着手のみ"]];
@@ -324,7 +349,7 @@ function renderQuiz(){
   var e=deck[qpos];
   var h='<div class="qcard"><div class="qch">'+esc(chOf(e))+'</div>';
   if(st.qdir==="kd"){
-    h+='<div class="qk">'+esc(e.k)+'<span class="srcchip '+srcCls(e.src)+'">'+esc(e.src)+'</span></div>'
+    h+='<div class="qk">'+esc(e.k)+'<span class="lvchip '+(e.lv||"B")+'">'+LVNAME[e.lv||"B"]+'</span></div>'
       +'<div class="ask">定義を声に出して言う</div>';
     if(qshown) h+='<div class="ansbox"><div class="ad">'+esc(e.d)+'</div></div>';
   }else{
@@ -373,6 +398,10 @@ function qstat(){
 
 document.addEventListener("click",function(ev){
   var t=ev.target;
+  var lf=t.closest&&t.closest("[data-lvf]");
+  if(lf){ st.lvf=lf.getAttribute("data-lvf"); save(); renderList(); return; }
+  var ql=t.closest&&t.closest("[data-qlv]");
+  if(ql){ st.qlv=ql.getAttribute("data-qlv"); save(); toQuiz(); return; }
   var qd=t.closest&&t.closest("[data-qd]");
   if(qd){ st.qdir=qd.getAttribute("data-qd"); save(); qshown=false; renderQuiz(); return; }
   var qs=t.closest&&t.closest("[data-qs]");
