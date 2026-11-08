@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b2a3a">
+<title>鑑定理論 答案構成チェック</title>
+<style>
+:root{
+  --bg:#e9ecef; --panel:#fffef9; --ink:#22303d; --sub:#6b7280; --line:#d8d3c6;
+  --accent:#2f5d8a; --red:#c0392b; --blue:#1f6fb2; --green:#2f7a55; --orange:#b4762a;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(30,40,60,.10);
+  --radius:14px; --maxw:860px;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0f1319; --panel:#1b212a; --ink:#e9e7e2; --sub:#9aa5b4; --line:#2f3845;
+    --accent:#7fb0e0; --red:#ef8279; --blue:#79b6e8; --green:#63c497; --orange:#e0b063;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 22px rgba(0,0,0,.4); }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;
+  font-size:16px;line-height:1.85;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(96px + env(safe-area-inset-bottom));}
+button,select,input{font-family:inherit;color:inherit}
+header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel) 94%, transparent);
+  backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hd{max-width:var(--maxw);margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.hd h1{font-size:16px;margin:0;font-weight:700;flex:1}
+.hd .sub{display:block;font-size:11px;color:var(--sub);font-weight:400}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap;text-decoration:none;color:inherit}
+.iconbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:14px}
+.hidden{display:none!important}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:16px 15px;margin-bottom:12px}
+.panel h2{font-size:15px;margin:0 0 10px;font-weight:700}
+.note{font-size:12.5px;color:var(--sub);line-height:1.75}
+.row2{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.row2 .iconbtn{flex:1;min-width:92px;text-align:center}
+.steps{counter-reset:s;margin:10px 0 0;padding:0;list-style:none}
+.steps li{position:relative;padding-left:26px;font-size:13.5px;margin:6px 0;line-height:1.7}
+.steps li:before{counter-increment:s;content:counter(s);position:absolute;left:0;top:4px;
+  width:19px;height:19px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;
+  display:flex;align-items:center;justify-content:center;font-weight:700}
+
+.meta{font-size:11.5px;color:var(--sub);font-family:-apple-system,sans-serif}
+.qq{font-size:17px;font-weight:700;margin:4px 0 8px;line-height:1.55}
+.qtext{font-size:15px;line-height:1.95}
+.qtext p{margin:.5em 0}
+.timer{text-align:center;font-size:13px;color:var(--sub);margin:12px 0 0;font-family:-apple-system,sans-serif}
+.timer b{font-size:19px;color:var(--ink)}
+
+.sub-h{font-size:13px;font-weight:700;color:var(--accent);margin:16px 0 6px;
+  border-bottom:1px solid var(--line);padding-bottom:3px}
+.it{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px dotted var(--line)}
+.it:last-child{border-bottom:none}
+.it .ix{flex:none;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--line);
+  font-size:11px;display:flex;align-items:center;justify-content:center;margin-top:4px;color:var(--sub);font-weight:700}
+.it .bd{flex:1;min-width:0}
+.it .tt{font-size:14.5px;font-weight:700;line-height:1.55}
+.it .ci{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+.it .ci span{font-size:10.5px;color:var(--sub);border:1px solid var(--line);border-radius:6px;padding:0 6px;line-height:1.7}
+.it .ci span.kk{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 40%, transparent)}
+.it .ci span.kr{color:var(--orange);border-color:color-mix(in srgb,var(--orange) 40%, transparent)}
+.it .pts{margin:5px 0 0;padding-left:1.1em;font-size:12.5px;color:var(--sub);line-height:1.7}
+.it .pts.hidden{display:none}
+.it .pb{background:none;border:none;color:var(--accent);font-size:11.5px;cursor:pointer;padding:2px 0;text-decoration:underline}
+.it .mk{flex:none;display:flex;gap:5px;margin-top:2px}
+.it .mk button{width:34px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--panel);
+  font-size:14px;font-weight:700;cursor:pointer;color:var(--sub);padding:0}
+.it .mk button.o.on{background:var(--green);border-color:var(--green);color:#fff}
+.it .mk button.x.on{background:var(--red);border-color:var(--red);color:#fff}
+.it.marked-x{background:color-mix(in srgb,var(--red) 5%, transparent)}
+
+.score{text-align:center;padding:6px 0 2px}
+.score .big{font-size:38px;font-weight:700;line-height:1.1;font-family:-apple-system,sans-serif}
+.score .big.g{color:var(--green)} .score .big.r{color:var(--red)}
+.misslist{margin:10px 0 0}
+.misslist .m{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin:6px 0;line-height:1.6}
+.misslist .m .tag{flex:none;font-size:10.5px;border:1px solid var(--red);color:var(--red);border-radius:999px;padding:0 7px;line-height:1.8;margin-top:2px}
+.chbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chbar .c{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--sub)}
+.chbar .c.hot{border-color:var(--red);color:var(--red);font-weight:700}
+.links{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;padding-top:10px;border-top:1px dashed var(--line)}
+.links a{font-size:12px;color:var(--accent);text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:3px 11px;background:var(--panel)}
+
+.rank{width:100%;border-collapse:collapse;font-size:13.5px}
+.rank td{padding:5px 2px;border-bottom:1px dotted var(--line)}
+.rank td.n{text-align:right;width:52px;font-family:-apple-system,sans-serif;color:var(--sub)}
+.rank .bar{height:7px;border-radius:999px;background:var(--red);opacity:.65;min-width:3px}
+
+.applinks{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:22px 0 8px}
+.applinks a{font-size:12px;color:var(--accent);text-decoration:none;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px}
+
+.fnav{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb,var(--panel) 95%, transparent);
+  backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+.fnav .in{max-width:var(--maxw);margin:0 auto;display:flex;gap:8px;align-items:center}
+.fnav button{flex:1;padding:13px 8px;border-radius:11px;border:1px solid var(--line);background:var(--panel);font-size:14px;font-weight:700;cursor:pointer}
+.fnav button.prim{background:var(--accent);border-color:var(--accent);color:#fff}
+.fnav button.ok{background:var(--green);border-color:var(--green);color:#fff}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd">
+    <a class="iconbtn" id="back" href="youten.html">‹ 板書</a>
+    <h1>答案構成チェック<span class="sub" id="hsub">先に自分で骨子を書いてから、引くべき章の抜けを潰す</span></h1>
+    <button class="iconbtn" id="rankBtn">弱点</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- HOME -->
+  <section id="v-home">
+    <div class="panel">
+      <h2>使い方</h2>
+      <ol class="steps">
+        <li>問題文だけが出ます。<b>紙に骨子（見出しと引く章）だけ</b>を書いてください。文章は書かない。</li>
+        <li>書けたらボタンを押すと、模範の構成項目が出ます。</li>
+        <li>各項目を <b>○（書けた）／✕（抜けた）</b> で自己採点します。</li>
+        <li>抜けた項目の<b>引用章</b>が集計され、「弱点」に貯まります。</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h2>出題範囲</h2>
+      <div class="row2" id="scope"></div>
+      <div class="row2" id="chsel"></div>
+      <div class="note" id="scopeNote"></div>
+    </div>
+    <div class="applinks">
+      <a href="youten.html">章別 要点板書</a><a href="sojo.html">遡上ドリル</a><a href="teigi.html">定義の入れ子</a><a href="ronbun.html">論文チェックブック</a><a href="checkbook.html">暗記チェックブック</a><a href="index.html">一問一答</a>
+    </div>
+  </section>
+
+  <!-- QUESTION -->
+  <section id="v-q" class="hidden">
+    <div class="panel">
+      <div class="meta" id="q-meta"></div>
+      <p class="qq" id="q-title"></p>
+      <div class="qtext" id="q-text"></div>
+      <div class="timer" id="q-timer"><b>0:00</b></div>
+    </div>
+  </section>
+
+  <!-- CHECKLIST -->
+  <section id="v-check" class="hidden">
+    <div class="panel">
+      <div class="meta" id="c-meta"></div>
+      <p class="qq" id="c-title"></p>
+      <div class="note">自分が書いた骨子と見比べて、各項目を ○／✕ で採点してください。</div>
+      <div class="row2" style="margin-top:10px">
+        <button class="iconbtn" id="allo">全部 ○</button>
+        <button class="iconbtn" id="allx">全部 ✕</button>
+        <button class="iconbtn" id="showq">問題文を見る</button>
+      </div>
+      <div id="c-body"></div>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="v-res" class="hidden">
+    <div class="panel">
+      <div class="meta" id="r-meta"></div>
+      <div class="score"><div class="big" id="r-big"></div><div class="note" id="r-sub"></div></div>
+      <div id="r-miss"></div>
+      <div class="links" id="r-links"></div>
+    </div>
+  </section>
+
+  <!-- RANK -->
+  <section id="v-rank" class="hidden">
+    <div class="panel">
+      <h2>抜けた章（のべ回数）</h2>
+      <div class="note" id="k-empty"></div>
+      <table class="rank" id="k-ch"></table>
+    </div>
+    <div class="panel">
+      <h2>3回以上抜けた項目</h2>
+      <div class="note">同じ抜けが3回出たものだけを、遡上ドリルの起点キーワードに足してください。</div>
+      <table class="rank" id="k-it"></table>
+    </div>
+    <div class="panel">
+      <h2>やった問題</h2>
+      <div class="note" id="k-done"></div>
+      <div class="row2"><button class="iconbtn" id="k-reset">記録をリセット</button></div>
+    </div>
+  </section>
+</div>
+
+<div class="fnav hidden" id="fnav"><div class="in" id="navin"></div></div>
+
+<script src="youten-map.js"></script>
+<script src="kousei-data.js"></script>
+<script>
+var DATA=window.KOUSEI_DATA||[];
+var $=function(s){return document.querySelector(s)};
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+var LS="kousei_v1";
+var st={ missCh:{}, missIt:{}, done:{}, scope:"all", ch:null };
+try{ var sv=JSON.parse(localStorage.getItem(LS)||"{}");
+  ["missCh","missIt","done"].forEach(function(k){ if(sv[k]) st[k]=sv[k]; });
+  if(sv.scope) st.scope=sv.scope; if(sv.ch) st.ch=sv.ch;
+}catch(e){}
+function save(){ try{ localStorage.setItem(LS, JSON.stringify(st)); }catch(e){} }
+
+function chLabel(k){ return k.replace(/^(総論|各論)(\d+)$/,"$1$2章"); }
+function allCh(){
+  var s={}; DATA.forEach(function(c){ (c.chs||[]).forEach(function(k){ s[k]=(s[k]||0)+1; }); });
+  return Object.keys(s).sort(function(a,b){ return s[b]-s[a]; }).map(function(k){ return [k,s[k]]; });
+}
+function pool(){
+  var p=DATA.slice();
+  if(st.scope==="kako") p=p.filter(function(c){ return /^[SHR]\d+-\d+/.test(c.nendo||""); });
+  if(st.scope==="reiwa") p=p.filter(function(c){ return /^R\d+-\d+/.test(c.nendo||""); });
+  if(st.scope==="todo") p=p.filter(function(c){ return !st.done[String(c.n)]; });
+  if(st.ch) p=p.filter(function(c){ return (c.chs||[]).indexOf(st.ch)>=0; });
+  return p;
+}
+
+/* ---------- home ---------- */
+function renderHome(){
+  var scopes=[["all","すべて"],["kako","本試験そのもの"],["reiwa","令和の本試験"],["todo","未着手のみ"]];
+  $("#scope").innerHTML=scopes.map(function(s){
+    return '<button class="iconbtn'+(st.scope===s[0]?" on":"")+'" data-sc="'+s[0]+'">'+s[1]+'</button>';
+  }).join("");
+  $("#chsel").innerHTML='<button class="iconbtn'+(st.ch?"":" on")+'" data-ch="">章で絞らない</button>'
+    +allCh().map(function(p){
+      return '<button class="iconbtn'+(st.ch===p[0]?" on":"")+'" data-ch="'+p[0]+'">'+chLabel(p[0])+' '+p[1]+'</button>';
+    }).join("");
+  var p=pool();
+  $("#scopeNote").textContent="該当 "+p.length+" 問（全"+DATA.length+"問）。やった問題は "+Object.keys(st.done).length+" 問。";
+  $("#fnav").classList.remove("hidden");
+  $("#navin").innerHTML='<button id="go" class="prim">この範囲から1問はじめる</button>';
+  $("#go").onclick=function(){
+    var q=pool(); if(!q.length){ alert("この範囲に問題がありません。"); return; }
+    start(q[Math.floor(Math.random()*q.length)]);
+  };
+}
+function show(v){
+  ["home","q","check","res","rank"].forEach(function(k){ $("#v-"+k).classList.toggle("hidden", k!==v); });
+  window.scrollTo(0,0);
+}
+
+/* ---------- 演習 ---------- */
+var cur=null, marks={}, t0=0, tmr=null;
+function start(c){
+  cur=c; marks={}; show("q");
+  $("#q-meta").textContent="問題"+c.n+"　"+c.ch+(c.nendo?"　"+c.nendo:"");
+  $("#q-title").textContent=c.title;
+  $("#q-text").innerHTML=c.q;
+  t0=Date.now(); tick();
+  if(tmr) clearInterval(tmr); tmr=setInterval(tick,1000);
+  $("#navin").innerHTML='<button id="giveup">やめる</button><button id="done" class="prim">骨子を書いた ›</button>';
+  $("#done").onclick=function(){ if(tmr) clearInterval(tmr); renderCheck(); };
+  $("#giveup").onclick=function(){ if(tmr) clearInterval(tmr); renderHome(); show("home"); };
+}
+function tick(){
+  var s=Math.floor((Date.now()-t0)/1000);
+  $("#q-timer").innerHTML="<b>"+Math.floor(s/60)+":"+("0"+(s%60)).slice(-2)+"</b>　経過";
+}
+function itemKey(i,j,k){ return cur.n+"-"+i+"-"+k; }
+function renderCheck(){
+  show("check");
+  $("#c-meta").textContent="問題"+cur.n+"　"+cur.ch+(cur.nendo?"　"+cur.nendo:"");
+  $("#c-title").textContent=cur.title;
+  var h="";
+  cur.subs.forEach(function(sb,si){
+    h+='<div class="sub-h">'+esc(sb.name||"骨子")+'</div>';
+    sb.items.forEach(function(it,ii){
+      var key=si+"_"+ii;
+      h+='<div class="it" id="it-'+key+'">'
+        +'<span class="ix">'+it.i+'</span>'
+        +'<div class="bd"><div class="tt">'+esc(it.t)+'</div>'
+        +'<div class="ci">'+(it.c||[]).map(function(x){
+            var cls=x.k==="基"?"kk":(x.k==="留"?"kr":"");
+            return '<span class="'+cls+'">'+esc(x.s)+'</span>';
+          }).join("")+'</div>'
+        +((it.p&&it.p.length)?'<button class="pb" data-pt="'+key+'">中身を見る</button><ul class="pts hidden" id="pt-'+key+'">'
+            +it.p.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>':'')
+        +'</div>'
+        +'<div class="mk"><button class="o" data-m="o" data-k="'+key+'">○</button>'
+        +'<button class="x" data-m="x" data-k="'+key+'">✕</button></div></div>';
+    });
+  });
+  $("#c-body").innerHTML=h;
+  $("#navin").innerHTML='<button id="back2">‹ 問題</button><button id="score" class="ok">採点する</button>';
+  $("#back2").onclick=function(){ show("q"); };
+  $("#score").onclick=finish;
+  paintMarks();
+}
+function paintMarks(){
+  [].forEach.call(document.querySelectorAll("#c-body .mk button"),function(b){
+    var k=b.getAttribute("data-k"), m=b.getAttribute("data-m");
+    b.classList.toggle("on", marks[k]===m);
+  });
+  [].forEach.call(document.querySelectorAll("#c-body .it"),function(d){
+    var k=d.id.replace("it-",""); d.classList.toggle("marked-x", marks[k]==="x");
+  });
+}
+document.addEventListener("click",function(e){
+  var t=e.target;
+  var sc=t.closest&&t.closest("[data-sc]");
+  if(sc){ st.scope=sc.getAttribute("data-sc"); save(); renderHome(); return; }
+  var ch=t.closest&&t.closest("[data-ch]");
+  if(ch){ var v=ch.getAttribute("data-ch"); st.ch=v||null; save(); renderHome(); return; }
+  var pt=t.closest&&t.closest("[data-pt]");
+  if(pt){ var el=document.getElementById("pt-"+pt.getAttribute("data-pt"));
+    if(el){ el.classList.toggle("hidden"); pt.textContent=el.classList.contains("hidden")?"中身を見る":"閉じる"; } return; }
+  var mk=t.closest&&t.closest("[data-m]");
+  if(mk){ var k=mk.getAttribute("data-k"), m=mk.getAttribute("data-m");
+    marks[k]=(marks[k]===m?null:m); paintMarks(); return; }
+});
+$("#allo").onclick=function(){ eachItem(function(k){ marks[k]="o"; }); paintMarks(); };
+$("#allx").onclick=function(){ eachItem(function(k){ marks[k]="x"; }); paintMarks(); };
+$("#showq").onclick=function(){ show("q"); };
+function eachItem(fn){ cur.subs.forEach(function(sb,si){ sb.items.forEach(function(it,ii){ fn(si+"_"+ii); }); }); }
+
+function finish(){
+  var tot=0, ok=0, miss=[];
+  cur.subs.forEach(function(sb,si){ sb.items.forEach(function(it,ii){
+    tot++; var k=si+"_"+ii;
+    if(marks[k]==="o") ok++;
+    else miss.push({sub:sb.name,it:it});
+  }); });
+  /* 記録 */
+  var chHit={};
+  miss.forEach(function(m){
+    var ik=cur.n+"｜"+m.it.t;
+    st.missIt[ik]=(st.missIt[ik]||0)+1;
+    (m.it.c||[]).forEach(function(x){
+      var g=/(総|各)第(\d+)章/.exec(x.s); if(!g) return;
+      var key=(g[1]==="総"?"総論":"各論")+g[2];
+      chHit[key]=1;
+    });
+  });
+  Object.keys(chHit).forEach(function(k){ st.missCh[k]=(st.missCh[k]||0)+1; });
+  st.done[String(cur.n)]={d:Date.now(), ok:ok, tot:tot};
+  save();
+
+  show("res");
+  $("#r-meta").textContent="問題"+cur.n+"　"+cur.ch+(cur.nendo?"　"+cur.nendo:"");
+  var rate=tot?Math.round(100*ok/tot):0;
+  var big=$("#r-big"); big.textContent=ok+" / "+tot;
+  big.className="big "+(rate>=80?"g":"r");
+  $("#r-sub").textContent="書けた項目 "+rate+"％";
+  var h="";
+  if(miss.length){
+    h+='<div class="sub-h">抜けた項目</div><div class="misslist">'
+      +miss.map(function(m){
+        return '<div class="m"><span class="tag">抜け</span><span>'+esc(m.sub)+'　'+esc(m.it.t)
+          +'<br><small style="color:var(--sub)">'+(m.it.c||[]).map(function(x){return esc(x.s);}).join(" ／ ")+'</small></span></div>';
+      }).join("")+'</div>';
+    var chs={}; miss.forEach(function(m){(m.it.c||[]).forEach(function(x){
+      var g=/(総|各)第(\d+)章/.exec(x.s); if(g) chs[(g[1]==="総"?"総論":"各論")+g[2]]=1; });});
+    var ks=Object.keys(chs);
+    if(ks.length) h+='<div class="sub-h">引き損ねた章</div><div class="chbar">'
+      +ks.map(function(k){return '<span class="c hot">'+chLabel(k)+'</span>';}).join("")+'</div>';
+  }else{
+    h+='<div class="note" style="margin-top:10px">抜けなし。次の問題へ。</div>';
+  }
+  $("#r-miss").innerHTML=h;
+
+  var ym=(window.YOUTEN_MAP&&window.YOUTEN_MAP.ron&&window.YOUTEN_MAP.ron[String(cur.n)])||[];
+  $("#r-links").innerHTML='<a href="ronbun.html#q='+cur.n+'">解答例を見る（論文チェックブック）</a>'
+    +ym.map(function(e){ return '<a href="youten.html#c='+encodeURIComponent(e.id)+'">'+esc(e.t)+'</a>'; }).join("");
+  $("#navin").innerHTML='<button id="again">もう1問</button><button id="tohome" class="prim">範囲を選ぶ</button>';
+  $("#again").onclick=function(){ var q=pool(); if(!q.length){ renderHome(); show("home"); return; }
+    start(q[Math.floor(Math.random()*q.length)]); };
+  $("#tohome").onclick=function(){ renderHome(); show("home"); };
+}
+
+/* ---------- 弱点 ---------- */
+function renderRank(){
+  show("rank"); $("#fnav").classList.remove("hidden");
+  $("#navin").innerHTML='<button id="rhome" class="prim">範囲を選ぶ</button>';
+  $("#rhome").onclick=function(){ renderHome(); show("home"); };
+  var ch=Object.keys(st.missCh).map(function(k){return [k,st.missCh[k]];}).sort(function(a,b){return b[1]-a[1];});
+  $("#k-empty").textContent=ch.length?"":"まだ記録がありません。1問やると貯まります。";
+  var max=ch.length?ch[0][1]:1;
+  $("#k-ch").innerHTML=ch.map(function(p){
+    return '<tr><td style="width:88px">'+chLabel(p[0])+'</td><td><div class="bar" style="width:'+Math.round(100*p[1]/max)+'%"></div></td><td class="n">'+p[1]+' 回</td></tr>';
+  }).join("");
+  var it=Object.keys(st.missIt).map(function(k){return [k,st.missIt[k]];})
+          .filter(function(p){return p[1]>=3;}).sort(function(a,b){return b[1]-a[1];});
+  $("#k-it").innerHTML=it.length?it.map(function(p){
+    return '<tr><td>'+esc(p[0])+'</td><td class="n">'+p[1]+' 回</td></tr>';
+  }).join("") : '<tr><td class="note">まだありません。</td></tr>';
+  var dn=Object.keys(st.done);
+  var sum=dn.reduce(function(a,k){ return [a[0]+st.done[k].ok, a[1]+st.done[k].tot]; },[0,0]);
+  $("#k-done").textContent=dn.length? (dn.length+" 問／項目 "+sum[0]+" ÷ "+sum[1]+"（"+Math.round(100*sum[0]/Math.max(1,sum[1]))+"％）")
+                                    : "まだありません。";
+}
+$("#rankBtn").onclick=renderRank;
+$("#k-reset").onclick=function(){
+  if(!confirm("答案構成チェックの記録をすべて消しますか？")) return;
+  st.missCh={}; st.missIt={}; st.done={}; save(); renderRank();
+};
+
+if(!DATA.length){ $("#v-home").innerHTML='<div class="panel note">データ（kousei-data.js）が読み込めませんでした。</div>'; }
+else { renderHome(); show("home"); }
+</script>
+</body>
+</html>
