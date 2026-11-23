@@ -937,6 +937,26 @@ function checkHash(){
     window.scrollTo(0,0);
     return;
   }
+  /* #c=第5章 鑑定評価の基本的事項 … 答案構成チェックなどから章の一覧を直接開く */
+  var mc=/^#c=(.+)$/.exec(location.hash||"");
+  if(mc){
+    var chName=decodeURIComponent(mc[1]);
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    if(!DATA.some(function(c){ return c.ch===chName; })){ alert("その章（"+chName+"）は見つかりませんでした。"); return; }
+    openList(chName);
+    window.scrollTo(0,0);
+    return;
+  }
+  /* #f=最有効使用 … 骨子項目からキーワード検索で開く */
+  var mf=/^#f=(.+)$/.exec(location.hash||"");
+  if(mf){
+    var kw=decodeURIComponent(mf[1]);
+    try{ history.replaceState(null,"",location.pathname); }catch(e){}
+    show("home");
+    var box=$("#q"); box.value=kw; box.oninput();
+    window.scrollTo(0,0);
+    return;
+  }
   var m=/^#s=(.+)$/.exec(location.hash||"");
   if(!m) return;
   var ok=askImport(decodeURIComponent(m[1]));

@@ -81,6 +81,11 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 .misslist{margin:10px 0 0}
 .misslist .m{display:flex;gap:8px;align-items:flex-start;font-size:13.5px;margin:6px 0;line-height:1.6}
 .misslist .m .tag{flex:none;font-size:10.5px;border:1px solid var(--red);color:var(--red);border-radius:999px;padding:0 7px;line-height:1.8;margin-top:2px}
+.kj{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:4px}
+.kj .lb{font-size:10.5px;color:var(--sub);line-height:2;flex:none}
+.kj a{font-size:11px;color:var(--accent);text-decoration:none;background:var(--panel);
+  border:1px solid color-mix(in srgb,var(--accent) 35%, transparent);border-radius:999px;padding:1px 9px;line-height:1.8}
+.kj a.w{color:var(--sub);border-color:var(--line)}
 .chbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .chbar .c{font-size:11.5px;border:1px solid var(--line);border-radius:999px;padding:2px 9px;color:var(--sub)}
 .chbar .c.hot{border-color:var(--red);color:var(--red);font-weight:700}
@@ -194,6 +199,7 @@ header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel
 <div class="fnav hidden" id="fnav"><div class="in" id="navin"></div></div>
 
 <script src="youten-map.js"></script>
+<script src="kijun-map.js"></script>
 <script src="kousei-data.js"></script>
 <script>
 var DATA=window.KOUSEI_DATA||[];
@@ -264,6 +270,40 @@ function tick(){
   $("#q-timer").innerHTML="<b>"+Math.floor(s/60)+":"+("0"+(s%60)).slice(-2)+"</b>　経過";
 }
 function itemKey(i,j,k){ return cur.n+"-"+i+"-"+k; }
+/* 骨子項目 → 基準（暗記チェックブック）へのリンク。kijun-map.js が無ければ何も出さない */
+function kijunHtml(si,ii){
+  var M=window.KIJUN_MAP; if(!M) return "";
+  var v=M[cur.n+"-"+si+"_"+ii]; if(!v) return "";
+  if(v.q && v.q.length){
+    return '<div class="kj"><span class="lb">'+(v.c==="high"?"基準":"基準の候補")+'</span>'
+      + v.q.map(function(x){
+          return '<a href="checkbook.html#q='+encodeURIComponent(x.id)+'">'+esc(x.id)+'　'+esc(x.t)+'</a>';
+        }).join("")+'</div>';
+  }
+  if(v.ch && v.ch.length && v.ch.length<=3){
+    return '<div class="kj"><span class="lb">基準</span>'
+      + v.ch.map(function(c){
+          return '<a class="w" href="checkbook.html#c='+encodeURIComponent(c)+'">'+esc(c)+'　を見る</a>';
+        }).join("")+'</div>';
+  }
+  /* 章だけの引用で候補が広いときは、項目名から作ったキーワードで基準を検索させる */
+  var it=(cur.subs[si]&&cur.subs[si].items[ii])||null;
+  var kw=it?kijunKw(it.t):"";
+  if(kw){
+    return '<div class="kj"><span class="lb">基準</span>'
+      + '<a class="w" href="checkbook.html#f='+encodeURIComponent(kw)+'">「'+esc(kw)+'」で基準を検索</a></div>';
+  }
+  return "";
+}
+/* 項目名から検索語をつくる（「〜の意義」などの語尾を落とす） */
+function kijunKw(t){
+  var s=String(t||"").replace(/[（(][^）)]*[）)]/g,"").replace(/^[①-⑳\d]+[．.、]?\s*/,"").trim();
+  for(var i=0;i<3;i++){
+    s=s.replace(/(の意義|の定義|の種類|の分類|の必要性|の要件|の求め方|の方法|の内容|の具体例|の留意点|上の留意点|の判断基準|の取扱い|の適否|の特徴|の相違点|の関係|の手順|の効果|等)$/,"");
+  }
+  s=s.trim();
+  return (s.length>=2 && s.length<=12) ? s : "";
+}
 function renderCheck(){
   show("check");
   $("#c-meta").textContent="問題"+cur.n+"　"+cur.ch+(cur.nendo?"　"+cur.nendo:"");
@@ -280,6 +320,7 @@ function renderCheck(){
             var cls=x.k==="基"?"kk":(x.k==="留"?"kr":"");
             return '<span class="'+cls+'">'+esc(x.s)+'</span>';
           }).join("")+'</div>'
+        + kijunHtml(si,ii)
         +((it.p&&it.p.length)?'<button class="pb" data-pt="'+key+'">中身を見る</button><ul class="pts hidden" id="pt-'+key+'">'
             +it.p.map(function(x){return '<li>'+esc(x)+'</li>';}).join("")+'</ul>':'')
         +'</div>'
@@ -325,7 +366,7 @@ function finish(){
   cur.subs.forEach(function(sb,si){ sb.items.forEach(function(it,ii){
     tot++; var k=si+"_"+ii;
     if(marks[k]==="o") ok++;
-    else miss.push({sub:sb.name,it:it});
+    else miss.push({sub:sb.name,it:it,si:si,ii:ii});
   }); });
   /* 記録 */
   var chHit={};
@@ -353,7 +394,9 @@ function finish(){
     h+='<div class="sub-h">抜けた項目</div><div class="misslist">'
       +miss.map(function(m){
         return '<div class="m"><span class="tag">抜け</span><span>'+esc(m.sub)+'　'+esc(m.it.t)
-          +'<br><small style="color:var(--sub)">'+(m.it.c||[]).map(function(x){return esc(x.s);}).join(" ／ ")+'</small></span></div>';
+          +'<br><small style="color:var(--sub)">'+(m.it.c||[]).map(function(x){return esc(x.s);}).join(" ／ ")+'</small>'
+          + kijunHtml(m.si,m.ii)
+          +'</span></div>';
       }).join("")+'</div>';
     var chs={}; miss.forEach(function(m){(m.it.c||[]).forEach(function(x){
       var g=/(総|各)第(\d+)章/.exec(x.s); if(g) chs[(g[1]==="総"?"総論":"各論")+g[2]]=1; });});
