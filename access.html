@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1b2a3a">
+<title>アクセスα 自己採点</title>
+<style>
+:root{
+  --bg:#e9ecef; --panel:#fffef9; --ink:#22303d; --sub:#6b7280; --line:#d8d3c6;
+  --accent:#2f5d8a; --red:#c0392b; --blue:#1f6fb2; --green:#2f7a55; --orange:#b4762a;
+  --shadow:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(30,40,60,.10);
+  --radius:14px; --maxw:860px;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0f1319; --panel:#1b212a; --ink:#e9e7e2; --sub:#9aa5b4; --line:#2f3845;
+    --accent:#7fb0e0; --red:#ef8279; --blue:#79b6e8; --green:#63c497; --orange:#e0b063;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 22px rgba(0,0,0,.4); }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic UI","Noto Sans JP",sans-serif;
+  font-size:16px;line-height:1.85;-webkit-text-size-adjust:100%;
+  padding-bottom:calc(110px + env(safe-area-inset-bottom));}
+button,select,input,textarea{font-family:inherit;color:inherit}
+header{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--panel) 94%, transparent);
+  backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+.hd{max-width:var(--maxw);margin:0 auto;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.hd h1{font-size:16px;margin:0;font-weight:700;flex:1}
+.hd .sub{display:block;font-size:11px;color:var(--sub);font-weight:400}
+.iconbtn{background:none;border:1px solid var(--line);border-radius:9px;padding:6px 10px;font-size:12px;cursor:pointer;white-space:nowrap;text-decoration:none;color:inherit;display:inline-block}
+.iconbtn.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:14px}
+.hidden{display:none!important}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:16px 15px;margin-bottom:12px}
+.panel h2{font-size:15px;margin:0 0 10px;font-weight:700}
+.note{font-size:12.5px;color:var(--sub);line-height:1.75}
+.row2{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.row2 .iconbtn{flex:1;min-width:92px;text-align:center}
+
+/* list */
+.card{display:block;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 15px;margin-bottom:10px;cursor:pointer}
+.card .ttl{font-size:16px;font-weight:700;line-height:1.5}
+.card .mt{font-size:11.5px;color:var(--sub);font-family:-apple-system,sans-serif;margin-top:3px}
+.card .sc{float:right;font-size:13px;font-weight:700;color:var(--accent);font-family:-apple-system,sans-serif}
+
+.meta{font-size:11.5px;color:var(--sub);font-family:-apple-system,sans-serif}
+.qq{font-size:17px;font-weight:700;margin:4px 0 10px;line-height:1.55}
+.qtext p{margin:.55em 0;font-size:15px;line-height:1.95}
+.qtext p.s{padding-left:1.1em;text-indent:-1.1em}
+.timer{text-align:center;font-size:13px;color:var(--sub);margin:12px 0 0;font-family:-apple-system,sans-serif}
+.timer b{font-size:22px;color:var(--ink);font-variant-numeric:tabular-nums}
+
+.sub-h{font-size:13px;font-weight:700;color:var(--accent);margin:18px 0 6px;
+  border-bottom:1px solid var(--line);padding-bottom:3px}
+.sub-h:first-child{margin-top:0}
+
+/* 採点項目 */
+.it{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px dotted var(--line)}
+.it:last-child{border-bottom:none}
+.it .bx{flex:none;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);
+  background:none;cursor:pointer;margin-top:3px;font-size:14px;line-height:1;
+  display:flex;align-items:center;justify-content:center;color:transparent}
+.it .bx.on{background:var(--green);border-color:var(--green);color:#fff}
+.it .bx.half{background:var(--orange);border-color:var(--orange);color:#fff;font-size:11px}
+.it .bd{flex:1;min-width:0}
+.it .tt{font-size:14.5px;font-weight:700;line-height:1.55}
+.it .pt{float:right;font-size:12px;color:var(--sub);font-family:-apple-system,sans-serif;margin-left:8px}
+.it .hint{font-size:13px;color:var(--sub);line-height:1.8;margin-top:5px}
+.it .hint.hidden{display:none}
+.it .pb{background:none;border:none;color:var(--accent);font-size:11.5px;cursor:pointer;padding:2px 0;text-decoration:underline}
+.it b{color:var(--ink);font-weight:700}
+
+.ta{width:100%;min-height:120px;border:1px solid var(--line);border-radius:10px;background:var(--bg);
+  padding:10px;font-size:14px;line-height:1.8;resize:vertical}
+
+/* score bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:60;background:color-mix(in srgb,var(--panel) 96%, transparent);
+  backdrop-filter:blur(10px);border-top:1px solid var(--line);
+  padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+.bar .in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar .n{font-size:13px;color:var(--sub);font-family:-apple-system,sans-serif;flex:1}
+.bar .n b{font-size:26px;color:var(--ink);font-variant-numeric:tabular-nums}
+.bar .n .j{font-size:12px;font-weight:700;margin-left:8px;padding:2px 8px;border-radius:6px}
+.gauge{height:7px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:6px;max-width:var(--maxw)}
+.gauge i{display:block;height:100%;background:var(--accent);transition:width .25s}
+</style>
+</head>
+<body>
+<header><div class="hd">
+  <button class="iconbtn" id="backBtn" onclick="go('list')">← 一覧</button>
+  <h1 id="hTitle">アクセスα 自己採点<span class="sub" id="hSub">答練の答案を配点表どおりに採点する</span></h1>
+  <a class="iconbtn" href="index.html">HOME</a>
+</div></header>
+
+<!-- ===== 一覧 ===== -->
+<div class="wrap" id="vList">
+  <div class="panel">
+    <h2>使い方</h2>
+    <p class="note">
+      ① 回を選んで <b>「問題を解く」</b> でタイマー開始 → 紙に答案を書く。<br>
+      ② 書き終わったら <b>「採点する」</b>。配点表の項目を1つずつ読み、書けていたら ◯（満点）、部分的なら △（半分）を押す。<br>
+      ③ 下のバーに <b>合計点</b> がリアルタイムで出る。採点結果は端末に保存される。<br>
+      ④ 落とした項目は「ヒント」を開いて骨子を確認し、<b>Notionの該当ページ</b>で復習する。
+    </p>
+  </div>
+  <div id="listBody"></div>
+  <div class="panel">
+    <p class="note">出典：TAC アクセスα鑑定理論論文（2027年合格目標）。問題文・解答例は自己採点用に要約・骨子化して収録しています。</p>
+  </div>
+</div>
+
+<!-- ===== 問題 ===== -->
+<div class="wrap hidden" id="vQ">
+  <div class="panel">
+    <div class="meta" id="qMeta"></div>
+    <div class="qq" id="qTitle"></div>
+    <div class="qtext" id="qBody"></div>
+    <div class="timer">経過時間 <b id="clock">00:00</b> <span id="limitNote"></span></div>
+    <div class="row2">
+      <button class="iconbtn" id="tBtn" onclick="toggleTimer()">一時停止</button>
+      <button class="iconbtn on" onclick="go('score')">採点する →</button>
+    </div>
+  </div>
+  <div class="panel">
+    <h2>答案メモ（任意）</h2>
+    <p class="note">紙に書くのが基本。ここは「書けなかった論点」のメモ用。</p>
+    <textarea class="ta" id="memo" placeholder="例）対象確定条件の種類、5つ目の未竣工建物等が出てこなかった"></textarea>
+  </div>
+</div>
+
+<!-- ===== 採点 ===== -->
+<div class="wrap hidden" id="vScore">
+  <div class="panel">
+    <div class="meta" id="sMeta"></div>
+    <div class="qq" id="sTitle"></div>
+    <div class="row2">
+      <button class="iconbtn" onclick="go('q')">← 問題文</button>
+      <button class="iconbtn" onclick="allHints()">ヒントを全部開く</button>
+      <button class="iconbtn" onclick="resetScore()">採点をやり直す</button>
+    </div>
+  </div>
+  <div class="panel" id="sBody"></div>
+  <div class="panel">
+    <h2>答案構成の考え方</h2>
+    <div id="sKousei"></div>
+  </div>
+  <div class="panel">
+    <h2>出題分野</h2>
+    <p class="note" id="sBunya"></p>
+    <p class="note" id="sNext" style="margin-top:10px"></p>
+  </div>
+  <div class="panel" id="sRel">
+    <h2>関連する論文チェックブックの問題</h2>
+    <div id="sRelBody"></div>
+  </div>
+  <div class="panel">
+    <h2>この回のふりかえり</h2>
+    <textarea class="ta" id="memo2" placeholder="次に直す1点を書く"></textarea>
+    <p class="note" id="savedNote" style="margin-top:8px"></p>
+  </div>
+</div>
+
+<div class="bar hidden" id="bar"><div class="in">
+  <div class="n"><b id="bNow">0</b> / <span id="bMax">50</span> 点<span class="j" id="bJudge"></span>
+    <div class="gauge"><i id="bGauge" style="width:0%"></i></div>
+  </div>
+  <button class="iconbtn on" onclick="go('list')">一覧へ</button>
+</div></div>
+
+<script src="access-data.js"></script>
+<script>
+var D = window.ACCESS_DATA || [];
+var cur = null, state = {}, view = 'list';
+var t0 = 0, tAcc = 0, tRun = false, tick = null;
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}); }
+function $(id){ return document.getElementById(id); }
+function key(n){ return 'access_'+n; }
+
+function load(n){
+  try{ var r = localStorage.getItem(key(n)); return r ? JSON.parse(r) : null; }catch(e){ return null; }
+}
+function save(){
+  if(!cur) return;
+  try{
+    localStorage.setItem(key(cur.n), JSON.stringify(state));
+    var el = $('savedNote'); if(el) el.textContent = '保存しました（' + new Date().toLocaleString('ja-JP') + '）';
+  }catch(e){}
+}
+
+function flat(d){
+  var a = [];
+  d.haiten.forEach(function(sec, si){
+    sec.items.forEach(function(it, ii){ a.push({ sec: sec.sec, si: si, ii: ii, it: it }); });
+  });
+  return a;
+}
+function totalOf(d){ var t = 0; flat(d).forEach(function(x){ t += x.it.p; }); return t; }
+function scoreOf(d, st){
+  var t = 0;
+  flat(d).forEach(function(x){
+    var v = st.marks ? st.marks[x.si+'_'+x.ii] : 0;
+    if(v === 2) t += x.it.p; else if(v === 1) t += x.it.p/2;
+  });
+  return Math.round(t*10)/10;
+}
+
+/* ---------- 一覧 ---------- */
+function renderList(){
+  var h = '';
+  D.forEach(function(d){
+    var st = load(d.n);
+    var mx = totalOf(d);
+    var sc = st ? scoreOf(d, st) : null;
+    h += '<button class="card" onclick="open_('+d.n+')">'
+      + (sc !== null ? '<span class="sc">'+sc+' / '+mx+'点</span>' : '')
+      + '<div class="ttl">'+esc(d.id)+'　'+esc(d.title)+'</div>'
+      + '<div class="mt">'+esc(d.range)+'　／　'+mx+'点　／　目安'+d.time+'分'
+      + (st && st.date ? '　／　最後に採点：'+esc(st.date) : '')
+      + '</div></button>';
+  });
+  if(!h) h = '<div class="panel"><p class="note">まだ回が登録されていません。</p></div>';
+  $('listBody').innerHTML = h;
+}
+
+function open_(n){
+  cur = null;
+  for(var i=0;i<D.length;i++){ if(D[i].n === n) cur = D[i]; }
+  if(!cur) return;
+  state = load(n) || { marks:{}, memo:'', memo2:'', sec:0 };
+  if(!state.marks) state.marks = {};
+  tAcc = state.sec || 0; tRun = false;
+  renderQ(); renderScore();
+  go('q');
+}
+
+/* ---------- 問題 ---------- */
+function renderQ(){
+  var d = cur;
+  $('qMeta').textContent = d.id + '　' + d.range + '　' + totalOf(d) + '点';
+  $('qTitle').textContent = d.title;
+  var h = '';
+  d.q.forEach(function(p, i){ h += '<p'+(i>0?' class="s"':'')+'>'+esc(p)+'</p>'; });
+  $('qBody').innerHTML = h;
+  $('limitNote').textContent = '（目安 ' + d.time + '分）';
+  $('memo').value = state.memo || '';
+  drawClock();
+}
+$('memo').addEventListener('input', function(){ state.memo = this.value; save(); });
+$('memo2').addEventListener('input', function(){ state.memo2 = this.value; save(); });
+
+function fmt(s){
+  var m = Math.floor(s/60), x = s%60;
+  return (m<10?'0':'')+m+':'+(x<10?'0':'')+x;
+}
+function nowSec(){ return tAcc + (tRun ? Math.floor((Date.now()-t0)/1000) : 0); }
+function drawClock(){
+  var s = nowSec();
+  $('clock').textContent = fmt(s);
+  if(cur && s > cur.time*60) $('clock').style.color = 'var(--red)'; else $('clock').style.color = '';
+}
+function startTimer(){ if(tRun) return; tRun = true; t0 = Date.now(); $('tBtn').textContent = '一時停止';
+  if(tick) clearInterval(tick); tick = setInterval(drawClock, 1000); }
+function stopTimer(){ if(!tRun) return; tAcc = nowSec(); tRun = false; if(tick){ clearInterval(tick); tick = null; }
+  $('tBtn').textContent = '再開'; state.sec = tAcc; save(); drawClock(); }
+function toggleTimer(){ tRun ? stopTimer() : startTimer(); }
+
+/* ---------- 採点 ---------- */
+function renderScore(){
+  var d = cur;
+  $('sMeta').textContent = d.id + '　配点表どおりに採点';
+  $('sTitle').textContent = d.title;
+  var h = '';
+  d.haiten.forEach(function(sec, si){
+    h += '<div class="sub-h">'+esc(sec.sec)+'</div>';
+    sec.items.forEach(function(it, ii){
+      var k = si+'_'+ii, v = state.marks[k] || 0;
+      var cls = v===2 ? 'bx on' : (v===1 ? 'bx half' : 'bx');
+      var mark = v===2 ? '✓' : (v===1 ? '△' : '・');
+      h += '<div class="it">'
+        + '<button class="'+cls+'" id="bx'+k+'" onclick="cyc('+si+','+ii+')">'+mark+'</button>'
+        + '<div class="bd">'
+        + '<div class="tt"><span class="pt">'+it.p+'点</span>'+esc(it.k)+'</div>'
+        + '<button class="pb" onclick="tog(\''+k+'\')">ヒント（骨子）</button>'
+        + '<div class="hint hidden" id="hn'+k+'">'+it.h+'</div>'
+        + '</div></div>';
+    });
+  });
+  $('sBody').innerHTML = h;
+
+  var kh = '';
+  d.kousei.forEach(function(x){ kh += '<div class="sub-h">'+esc(x.s)+'</div><p class="note">'+x.t+'</p>'; });
+  $('sKousei').innerHTML = kh;
+  $('sBunya').textContent = d.bunya;
+  $('sNext').textContent = d.next ? '【次回出題予告】 ' + d.next : '';
+
+  var rh = '';
+  (d.rel||[]).forEach(function(n){
+    rh += '<a class="iconbtn" style="margin:0 6px 6px 0" href="ronbun.html#q='+n+'">問題'+n+' を開く</a>';
+  });
+  if(d.notion) rh += '<a class="iconbtn" style="margin:0 6px 6px 0" href="'+d.notion+'" target="_blank" rel="noopener">Notionの解説ページ</a>';
+  $('sRelBody').innerHTML = rh || '<p class="note">—</p>';
+
+  $('memo2').value = state.memo2 || '';
+  bar();
+}
+function cyc(si, ii){
+  var k = si+'_'+ii;
+  var order = { 0:2, 2:1, 1:0 };        // 未 → ◯(満点) → △(半分) → 未
+  state.marks[k] = order[state.marks[k] || 0];
+  var nv = state.marks[k];
+  var b = $('bx'+k);
+  b.className = nv===2 ? 'bx on' : (nv===1 ? 'bx half' : 'bx');
+  b.textContent = nv===2 ? '✓' : (nv===1 ? '△' : '・');
+  state.date = new Date().toLocaleDateString('ja-JP');
+  save(); bar();
+}
+function tog(k){ var e = $('hn'+k); if(e) e.classList.toggle('hidden'); }
+function allHints(){
+  var ns = document.querySelectorAll('#sBody .hint');
+  var anyHidden = false;
+  ns.forEach(function(n){ if(n.classList.contains('hidden')) anyHidden = true; });
+  ns.forEach(function(n){ n.classList.toggle('hidden', !anyHidden); });
+}
+function resetScore(){
+  if(!confirm('この回の採点をすべて消します。よろしいですか？')) return;
+  state.marks = {}; save(); renderScore();
+}
+function bar(){
+  if(!cur) return;
+  var mx = totalOf(cur), sc = scoreOf(cur, state);
+  $('bNow').textContent = sc; $('bMax').textContent = mx;
+  var pct = mx ? Math.round(sc/mx*100) : 0;
+  $('bGauge').style.width = pct + '%';
+  var j = $('bJudge'), lab, col;
+  if(pct >= 70){ lab = '合格圏'; col = 'var(--green)'; }
+  else if(pct >= 55){ lab = 'あと一歩'; col = 'var(--orange)'; }
+  else { lab = '要復習'; col = 'var(--red)'; }
+  j.textContent = lab + '（' + pct + '%）';
+  j.style.background = 'color-mix(in srgb,' + col + ' 16%, transparent)';
+  j.style.color = col;
+}
+
+/* ---------- 画面遷移 ---------- */
+function go(v){
+  view = v;
+  $('vList').classList.toggle('hidden', v !== 'list');
+  $('vQ').classList.toggle('hidden', v !== 'q');
+  $('vScore').classList.toggle('hidden', v !== 'score');
+  $('bar').classList.toggle('hidden', v === 'list');
+  $('backBtn').classList.toggle('hidden', v === 'list');
+  if(v === 'list'){ stopTimer(); cur = null; renderList(); $('hSub').textContent = '答練の答案を配点表どおりに採点する'; }
+  else if(cur){ $('hSub').textContent = cur.id + '　' + cur.range; }
+  if(v === 'q'){ startTimer(); }
+  if(v === 'score'){ stopTimer(); renderScore(); }
+  window.scrollTo(0, 0);
+}
+
+renderList();
+go('list');
+</script>
+</body>
+</html>
