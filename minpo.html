@@ -635,7 +635,7 @@ function renderCard(){
   var c=deck[pos]; if(!c) return;
   if(state.last!==c.id) posDirty=true;      /* この端末で位置が進んだ */
   state.last=c.id; save();
-  $("#st-meta").textContent=c.id+"　"+c.ch+"　原典"+c.page+"　（"+(pos+1)+"／"+deck.length+"）";
+  $("#st-meta").textContent=c.id+"　"+c.ch+"　"+(/^p\./.test(c.page)?"原典":"")+c.page+"　（"+(pos+1)+"／"+deck.length+"）";
   $("#st-dots").innerHTML=dotsHtml(c.id);
   $("#st-kai").innerHTML=c.partial?'<span class="kaitag">改正で一部除外</span>':'';
   $("#st-q").textContent=c.title;
